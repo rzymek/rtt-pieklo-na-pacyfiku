@@ -2,23 +2,14 @@ import {G, R_Amer, ROLES, V} from "../globals.js"
 import {exitsFor, flightsFor, possibleMovesFor} from "../game/hex.js"
 import {applyHit} from "../game/combat";
 import {scorePlaneLost} from "../game/victory";
-import {ALT_HIGH, ALT_LOW, ALT_VERY_LOW, ALTITUDE_NAMES, altitudeOf, canChangeAltitude} from "../game/altitude";
-import {shootersOf} from "./shooters";
-import {startCombat} from "./phases";
-import {changeSide, otherSide} from "../lifecycle/changeSide";
+import {ALTITUDE_ACTIONS, ALTITUDE_NAMES, altitudeHandlers, altitudeOf, canChangeAltitude} from "../game/altitude";
+import {endMovement} from "./phases";
 import {select_plane} from "./select_plane.js";
-import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
 import {bombableHexes, canBomb, dropBomb} from "./bombers";
 import {bombsLeft} from "../game/bombs";
 import {bombGun, hasGun} from "./aa_guns";
 import type {PlaneInstance} from "../types";
-
-const ALTITUDE_ACTIONS: [string, number][] = [
-  ["wysoko", ALT_HIGH],
-  ["nisko", ALT_LOW],
-  ["bardzo_nisko", ALT_VERY_LOW],
-]
 
 function selectAltitude(altitude: number) {
   const plane = selectedPlaneOfTheActiveSide();
@@ -167,11 +158,7 @@ export const movePlanes = {
     G.moved = []
     G.flown_over = {}
     delete G.selected_plane
-    if (!isEmpty(shootersOf(otherSide(G.active)))) {
-      changeSide();
-      return goto("moved_into_firelane");
-    }
-    startCombat()
+    endMovement()
   },
 
   select_plane,
@@ -194,17 +181,7 @@ export const movePlanes = {
     if (!canBomb(plane)) delete G.selected_plane
   },
 
-  wysoko() {
-    selectAltitude(ALT_HIGH)
-  },
-
-  nisko() {
-    selectAltitude(ALT_LOW)
-  },
-
-  bardzo_nisko() {
-    selectAltitude(ALT_VERY_LOW)
-  },
+  ...altitudeHandlers(selectAltitude),
 
   leave_board() {
     const plane = selectedPlaneOfTheActiveSide();

@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
-import {ALT_HIGH, ALT_LOW, ALT_VERY_LOW, canChangeAltitude, maxSpeedAt} from "./altitude";
+import {ALT_HIGH, ALT_LOW, ALT_LOWEST, ALT_VERY_HIGH, ALT_VERY_LOW, canChangeAltitude, maxSpeedAt} from "./altitude";
 import {firstOnFireLine} from "./combat";
 import {movesMapFor} from "./hex";
 import {planesInFirelane} from "../procedures/planesInFirelane";
@@ -20,35 +20,41 @@ function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
 }
 
 describe('canChangeAltitude', () => {
-  it('allows only one level down at a time', () => {
+  it('allows one or two levels down (4.2.2)', () => {
+    expect(canChangeAltitude(spit(), ALT_HIGH)).toBe(true);
     expect(canChangeAltitude(spit(), ALT_LOW)).toBe(true);
     expect(canChangeAltitude(spit(), ALT_VERY_LOW)).toBe(false);
   });
 
-  it('allows only one level up at a time', () => {
-    expect(canChangeAltitude(spit({altitude: ALT_VERY_LOW}), ALT_LOW)).toBe(true);
-    expect(canChangeAltitude(spit({altitude: ALT_VERY_LOW}), ALT_HIGH)).toBe(false);
+  it('allows only one level up (4.2.3)', () => {
+    expect(canChangeAltitude(spit({altitude: ALT_LOWEST}), ALT_VERY_LOW)).toBe(true);
+    expect(canChangeAltitude(spit({altitude: ALT_LOWEST}), ALT_LOW)).toBe(false);
   });
 
-  it('forbids a climb that would drop the limit below the minimum speed', () => {
+  it('forbids a climb that would drop the limit below the minimum speed (4.2.3)', () => {
     expect(canChangeAltitude(he111({altitude: ALT_LOW}), ALT_HIGH)).toBe(true);
-    // damaged He 111: max 3, min 3
+    // damaged Dauntless: max 3, min 3
     expect(canChangeAltitude(he111({altitude: ALT_LOW, damaged: true}), ALT_HIGH)).toBe(false);
     expect(canChangeAltitude(he111({altitude: ALT_LOW, damaged: true}), ALT_VERY_LOW)).toBe(true);
     expect(canChangeAltitude(he111({altitude: ALT_LOW, damaged: true}), ALT_LOW)).toBe(true);
   });
 
   it('rejects levels that do not exist', () => {
-    expect(canChangeAltitude(spit(), -1)).toBe(false);
-    expect(canChangeAltitude(spit({altitude: ALT_VERY_LOW}), 3)).toBe(false);
+    expect(canChangeAltitude(spit(), 6)).toBe(false);
+    expect(canChangeAltitude(spit({altitude: ALT_LOWEST}), 0)).toBe(false);
   });
 });
 
 describe('maxSpeedAt', () => {
-  it('adds 1 when descending and subtracts 1 when climbing', () => {
+  it('adds 1 when descending, by one or two levels, and subtracts 1 when climbing', () => {
     expect(maxSpeedAt(spit({altitude: ALT_LOW}), ALT_VERY_LOW)).toBe(7);
+    expect(maxSpeedAt(spit({altitude: ALT_LOW}), ALT_LOWEST)).toBe(7);
     expect(maxSpeedAt(spit({altitude: ALT_LOW}), ALT_LOW)).toBe(6);
     expect(maxSpeedAt(spit({altitude: ALT_LOW}), ALT_HIGH)).toBe(5);
+  });
+
+  it('the top altitude carries no counter (4.2.4)', () => {
+    expect(maxSpeedAt(spit(), ALT_VERY_HIGH)).toBe(6);
   });
 });
 
@@ -56,9 +62,9 @@ describe('movesMapFor', () => {
   it('range follows the chosen altitude', () => {
     // direction 0 advances B by one per hex
     expect(movesMapFor(spit(), {})).not.toHaveProperty(["A20.B27"]);
-    expect(movesMapFor(spit(), {}, ALT_LOW)).toHaveProperty(["A20.B27"]);
-    expect(movesMapFor(spit({altitude: ALT_LOW}), {})).toHaveProperty(["A20.B26"]);
-    expect(movesMapFor(spit({altitude: ALT_LOW}), {}, ALT_HIGH)).not.toHaveProperty(["A20.B26"]);
+    expect(movesMapFor(spit(), {}, ALT_HIGH)).toHaveProperty(["A20.B27"]);
+    expect(movesMapFor(spit({altitude: ALT_HIGH}), {})).toHaveProperty(["A20.B26"]);
+    expect(movesMapFor(spit({altitude: ALT_HIGH}), {}, ALT_VERY_HIGH)).not.toHaveProperty(["A20.B26"]);
   });
 
   describe('4.1.1 occupied hexes', () => {
@@ -76,13 +82,13 @@ describe('movesMapFor', () => {
     });
 
     it('allows a hex occupied at another altitude', () => {
-      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_LOW})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_HIGH})]});
       expect(moves).toHaveProperty([at]);
       expect(moves).toHaveProperty(["A20.B24"]);
     });
 
     it('checks the altitude the plane will end its move at', () => {
-      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_LOW})]}, ALT_LOW);
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_HIGH})]}, ALT_HIGH);
       expect(moves).not.toHaveProperty([at]);
     });
 
@@ -108,23 +114,23 @@ describe('movesMapFor', () => {
 
 describe('fire across altitudes', () => {
   it('firstOnFireLine ignores planes at another altitude', () => {
-    const target = he111({altitude: ALT_LOW});
+    const target = he111({altitude: ALT_HIGH});
     const board = {[R_Jap]: [spit()], [R_Amer]: [target]};
     expect(firstOnFireLine(spit(), board)).toBeNull();
-    expect(firstOnFireLine(spit({altitude: ALT_LOW}), board)?.plane).toBe(target);
+    expect(firstOnFireLine(spit({altitude: ALT_HIGH}), board)?.plane).toBe(target);
   });
 
   it('a plane at another altitude does not block the line', () => {
-    const blocker = he111({id: "0.1", at: "A20.B21", altitude: ALT_LOW});
+    const blocker = he111({id: "0.1", at: "A20.B21", altitude: ALT_HIGH});
     const target = he111();
     const board = {[R_Jap]: [spit()], [R_Amer]: [blocker, target]};
     expect(firstOnFireLine(spit(), board)?.plane).toBe(target);
   });
 
   it('planesInFirelane counts only shooters at the same altitude', () => {
-    G.board = {planes: {[R_Jap]: [spit()], [R_Amer]: [he111({altitude: ALT_LOW})]}};
+    G.board = {planes: {[R_Jap]: [spit()], [R_Amer]: [he111({altitude: ALT_HIGH})]}};
     expect(planesInFirelane(R_Amer)).toEqual([]);
-    G.board = {planes: {[R_Jap]: [spit({altitude: ALT_LOW})], [R_Amer]: [he111({altitude: ALT_LOW})]}};
+    G.board = {planes: {[R_Jap]: [spit({altitude: ALT_HIGH})], [R_Amer]: [he111({altitude: ALT_HIGH})]}};
     expect(planesInFirelane(R_Amer).map(it => it.id)).toEqual(["0.0"]);
   });
 });

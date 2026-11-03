@@ -256,15 +256,15 @@ describe('no own plane on the board', () => {
     expect(goto).toHaveBeenCalledWith("move_planes");
   });
 
-  it('keeps the combat phase for the AA guns', () => {
-    const he = plane("0.0", "SBD", {at: "A20.B20", altitude: 2});
+  it('keeps the AA phase for its guns (6.2)', () => {
+    const he = plane("0.0", "SBD", {at: "A20.B20", altitude: 1});
     setup([he], []);
     G.off_board = [offBoard("1.0", 8)];
     G.aa_guns = ["A20.B20"];
-    endCombat();
+    movePlanes.done();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledTimes(1);
-    expect(goto).toHaveBeenCalledWith("combat");
+    expect(goto).toHaveBeenCalledWith("anti_aircraft");
   });
 
   it('moves the stages on while both sides are off the board', () => {
@@ -282,9 +282,9 @@ describe('4.2.6: no free way to fly', () => {
   // A He-111 at max speed 4, min 3, turns after 2. Boxed in on all altitudes it can reach.
   function boxed(extra: Partial<PlaneInstance> = {}) {
     const he = plane("0.0", "SBD", {at: "A20.B20", direction: N, damaged: true, ...extra});
-    // Damaged: 3-3, cannot climb and flying high cannot be reached from below.
-    const blocker = (id: string, at: string, altitude = 0) => plane(id, "A6M6", {at, altitude});
-    const blockers = ["A20.B21"].flatMap((at, i) => [blocker(`1.${i}0`, at, 0), blocker(`1.${i}1`, at, 1)]);
+    const blocker = (id: string, at: string, altitude: number) => plane(id, "A6M6", {at, altitude});
+    // Damaged: 3-3, cannot climb; it can go down by two levels.
+    const blockers = ["A20.B21"].flatMap((at, i) => [5, 4, 3].map(altitude => blocker(`1.${i}${altitude}`, at, altitude)));
     setup([he], blockers);
     return he;
   }

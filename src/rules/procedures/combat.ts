@@ -5,7 +5,6 @@ import {select_plane} from "./select_plane.js"
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide"
 import {canUnjam, fireTarget, markShot, shootersOf} from "./shooters"
 import {endCombat} from "./phases"
-import {aaTargets, fireGun, gunsReady, selectGun} from "./aa_guns"
 
 export const combat = {
   inactive: "faza walki",
@@ -39,20 +38,9 @@ export const combat = {
         button("attack", true)
       }
     }
-
-    gunsReady().forEach(gun => action("select_gun", gun))
-    if (G.selected_gun !== undefined)
-      aaTargets(G.selected_gun).forEach(target => action("aa_fire", target.id))
   },
 
-  select_plane(planeId: string) {
-    delete G.selected_gun
-    select_plane(planeId)
-  },
-
-  select_gun: selectGun,
-
-  aa_fire: fireGun,
+  select_plane,
 
   attack() {
     const plane = selectedPlaneOfTheActiveSide()

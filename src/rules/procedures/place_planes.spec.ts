@@ -92,3 +92,23 @@ describe('9.3: setting up the planes', () => {
     expect(G.to_place![R_Amer][0].plane.nazwa).toBe(planes.B25.nazwa);
   });
 });
+
+describe('9.0.3: starting altitudes', () => {
+  it('sets up at the top altitude, then lets the player pick any free one on the hex', () => {
+    placePlanes.place_plane('A49.B39');
+    const first = G.board.planes[R_Jap][0];
+    expect(first.altitude).toBeUndefined();
+    placePlanes.wysokosc_1();
+    expect(first.altitude).toBe(1);
+
+    expect(actions()).toContain('A49.B39');
+    placePlanes.place_plane('A49.B39');
+    const second = G.board.planes[R_Jap][1];
+    placePlanes.wysokosc_1();
+    expect(second.altitude).toBeUndefined();
+    placePlanes.wysokosc_4();
+    expect(second.altitude).toBe(4);
+    placePlanes.wysokosc_5();
+    expect(second.altitude).toBeUndefined();
+  });
+});

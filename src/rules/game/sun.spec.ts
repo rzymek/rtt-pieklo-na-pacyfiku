@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {G, planes} from "../globals";
 import type {PlaneInstance} from "../types";
-import {ALT_LOW} from "./altitude";
+import {ALT_VERY_LOW} from "./altitude";
 import {aaHitFrom} from "./aa";
 import {rollShot} from "./combat";
 import {sunEdgeFor, sunHexes, sunPenalty} from "./sun";
@@ -73,7 +73,7 @@ describe('firing into the sun (5.0.1)', () => {
 });
 
 describe('AA guns (6.2.5)', () => {
-  const low = (at: string): PlaneInstance => ({...spit(at, N), altitude: ALT_LOW});
+  const low = (at: string): PlaneInstance => ({...spit(at, N), altitude: ALT_VERY_LOW});
 
   it('cannot hit a plane against the sun', () => {
     G.sun = "W";

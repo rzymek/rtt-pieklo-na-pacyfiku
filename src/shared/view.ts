@@ -17,9 +17,11 @@ export interface ViewPlaneInstance {
 export interface ViewActions {
   move_hex?: string[]
   select_plane?: string[]
-  wysoko?: number
-  nisko?: number
-  bardzo_nisko?: number
+  wysokosc_1?: number
+  wysokosc_2?: number
+  wysokosc_3?: number
+  wysokosc_4?: number
+  wysokosc_5?: number
   attack?: number
   unjam?: number
   bomb?: string[]

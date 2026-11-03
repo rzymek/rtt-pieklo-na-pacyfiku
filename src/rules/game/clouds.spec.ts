@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
-import {ALT_LOW} from "./altitude";
+import {ALT_VERY_LOW} from "./altitude";
 import {fireLineHexes, firstOnFireLine, rollShot} from "./combat";
 
 const CLOUD = "A33.B28"
@@ -72,7 +72,7 @@ describe('attack strength (5.0.2)', () => {
   });
 
   it('is not affected below the clouds (5.0.4)', () => {
-    const atk = rollShot(spit(CLOUD, {altitude: ALT_LOW}), he111(EDGE, {altitude: ALT_LOW}), 1).atk;
+    const atk = rollShot(spit(CLOUD, {altitude: ALT_VERY_LOW}), he111(EDGE, {altitude: ALT_VERY_LOW}), 1).atk;
     expect(atk).toBe(4);
   });
 });
@@ -91,7 +91,7 @@ describe('fire line (5.0.5)', () => {
   });
 
   it('has 5 hexes below a cloud (5.0.4)', () => {
-    expect(fireLineHexes(spit(CLOUD, {altitude: ALT_LOW}))).toHaveLength(5);
+    expect(fireLineHexes(spit(CLOUD, {altitude: ALT_VERY_LOW}))).toHaveLength(5);
   });
 
   it('keeps a plane in a cloud from reaching further targets', () => {

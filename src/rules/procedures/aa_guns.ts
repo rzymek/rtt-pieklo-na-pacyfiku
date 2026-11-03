@@ -1,10 +1,12 @@
 import type {PlaneInstance} from "../types";
-import {G, L, R_Jap, R_Amer, ROLES} from "../globals";
+import {G, L, R_Jap, ROLES} from "../globals";
 import {aaHitFrom, canPlaceGun, GUN_DESTROYED_FROM} from "../game/aa";
 import {ALTITUDE_NAMES, altitudeOf} from "../game/altitude";
 import {applyHit} from "../game/combat";
 import {boardHexes} from "../game/scenarios";
-import {hexDistance} from "@rzymek/rally-the-troops-module/rules";
+import {hexDistance, isEmpty} from "@rzymek/rally-the-troops-module/rules";
+import {otherSide} from "../lifecycle/changeSide";
+import {endAntiAircraft} from "./phases";
 
 function gunsLeftToPlace(): number {
   return (L.count as number) - (G.aa_guns ?? []).length
@@ -37,14 +39,19 @@ export const placeAaGuns = {
   },
 }
 
-export function aaTargets(gun: string): PlaneInstance[] {
-  return G.board.planes[R_Amer].filter(plane => aaHitFrom(gun, plane) !== null)
+// 6.1.1: the land guns of the scenario, so far on the Japanese side only.
+function gunsOf(side: number): string[] {
+  return side === R_Jap ? G.aa_guns ?? [] : []
 }
 
-// 6.1, 6.2.1: only in the British combat phase, one shot per gun.
+// 6.2: the guns of the active side fire at the planes of the other one.
+export function aaTargets(gun: string): PlaneInstance[] {
+  return G.board.planes[otherSide(G.active)].filter(plane => aaHitFrom(gun, plane) !== null)
+}
+
+// 6.3.1: one shot per gun in a stage.
 export function gunsReady(): string[] {
-  if (G.active !== R_Jap) return []
-  return (G.aa_guns ?? []).filter(gun => !set_has(G.aa_fired ?? [], gun) && aaTargets(gun).length > 0)
+  return gunsOf(G.active).filter(gun => !set_has(G.aa_fired ?? [], gun) && aaTargets(gun).length > 0)
 }
 
 export function selectGun(gun: string) {
@@ -69,6 +76,30 @@ export function fireGun(planeId: string) {
   const roll = random(6) + 1
   const result = roll >= hitFrom ? applyHit(plane) : 'pudło'
   log(`Działko ${gun} ostrzeliwuje ${plane.plane.nazwa} [${ALTITUDE_NAMES[altitudeOf(plane)]}, odl:${hexDistance(gun, plane.at)}, rzut:${roll}] → ${result}`)
+}
+
+// 3.0, phases 2 and 5: right after the enemy's movement, the guns fire at its planes.
+export const antiAircraft = {
+  inactive: "ostrzał przeciwlotniczy",
+
+  prompt() {
+    prompt(`Ostrzał przeciwlotniczy: ${ROLES[G.active]}${G.selected_gun ? ` – działko ${G.selected_gun}, wybierz cel` : " – wybierz działko"}`)
+    gunsReady().forEach(gun => action("select_gun", gun))
+    if (G.selected_gun !== undefined)
+      aaTargets(G.selected_gun).forEach(target => action("aa_fire", target.id))
+    button("done", true)
+  },
+
+  select_gun: selectGun,
+
+  aa_fire(planeId: string) {
+    fireGun(planeId)
+    if (isEmpty(gunsReady())) endAntiAircraft()
+  },
+
+  done() {
+    endAntiAircraft()
+  },
 }
 
 export function hasGun(hex: string): boolean {

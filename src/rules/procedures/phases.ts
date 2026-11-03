@@ -1,16 +1,36 @@
 import {G, R_Amer, ROLES} from "../globals";
-import {ALT_HIGH, altitudeOf} from "../game/altitude";
+import {ALT_VERY_HIGH, altitudeOf} from "../game/altitude";
 import {hexesAround} from "../game/scenarios";
-import {changeSide} from "../lifecycle/changeSide";
+import {changeSide, otherSide} from "../lifecycle/changeSide";
 import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {canUnjam, shootersOf} from "./shooters";
 import {gunsReady} from "./aa_guns";
 import {nextToReturn} from "./return_planes";
 import {isGameOver} from "../game/victory";
 
+// 3.0: a movement phase (1, 4) is followed by the AA phase of the other side (2, 5).
+export function endMovement() {
+  changeSide()
+  G.aa_fired = []
+  if (!isEmpty(gunsReady())) return goto("anti_aircraft")
+  endAntiAircraft()
+}
+
+// 3.0: then comes the combat phase of the side that moved (3, 6),
+// 5.4: opened by the enemy firing at the planes that ended their move on its fire line.
+export function endAntiAircraft() {
+  delete G.selected_gun
+  changeSide()
+  if (!isEmpty(shootersOf(otherSide(G.active)))) {
+    changeSide()
+    return goto("moved_into_firelane")
+  }
+  startCombat()
+}
+
 export function startCombat() {
   const planes = G.board.planes[G.active]
-  if (planes.some(canUnjam) || !isEmpty(shootersOf(G.active)) || !isEmpty(gunsReady())) {
+  if (planes.some(canUnjam) || !isEmpty(shootersOf(G.active))) {
     goto("combat")
   } else {
     endCombat()
@@ -28,7 +48,6 @@ export function endCombat() {
     log(`Etap ${G.stage}`)
   }
   G.shot = []
-  G.aa_fired = []
   enterReinforcements()
   startMovement()
 }
@@ -48,7 +67,7 @@ function enterReinforcements() {
   const entering = (G.reinforcements?.[G.active] ?? []).filter(it => it.stage === G.stage)
   for (const {plane, at, direction} of entering) {
     const occupied = Object.values(G.board.planes).flat()
-      .filter(p => !p.destroyed && altitudeOf(p) === ALT_HIGH)
+      .filter(p => !p.destroyed && altitudeOf(p) === ALT_VERY_HIGH)
       .map(p => p.at)
     const hex = hexesAround(at, 5).find(it => !occupied.includes(it))!
     const offBoard = (G.off_board ?? []).filter(it => parseInt(it.plane.id) === G.active).length

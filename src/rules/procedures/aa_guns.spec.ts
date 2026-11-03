@@ -2,10 +2,10 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
 import {G, L, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
-import {ALT_LOW, ALT_VERY_LOW} from "../game/altitude";
+import {ALT_LOWEST, ALT_VERY_HIGH, ALT_VERY_LOW} from "../game/altitude";
 import {on_setup} from "../lifecycle/on_setup";
-import {placeAaGuns} from "./aa_guns";
-import {combat} from "./combat";
+import {antiAircraft, placeAaGuns} from "./aa_guns";
+import {endMovement} from "./phases";
 import {movePlanes} from "./move_planes";
 
 vi.mock("../globals", async importOriginal => ({
@@ -27,12 +27,13 @@ let dice: number[];
 const roll = (value: number) => dice = [value - 1];
 
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.SBD, at: GUN, direction: 3, altitude: ALT_LOW, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at: GUN, direction: 3, altitude: ALT_VERY_LOW, ...overrides}
 }
 
 function setup(niem: PlaneInstance[], guns = [GUN], active = R_Jap) {
+  for (const key of Object.keys(G)) delete (G as any)[key];
   Object.assign(G, {
-    active, shot: [], moved: [], targets: [], bombed: [], flown_over: {}, aa_guns: guns, aa_fired: [],
+    active, stage: 1, shot: [], moved: [], targets: [], bombed: [], flown_over: {}, aa_guns: guns, aa_fired: [],
     board: {planes: {[R_Amer]: niem, [R_Jap]: []}},
   });
   delete G.selected_plane;
@@ -52,7 +53,7 @@ function actions(state: { prompt(): void }) {
 function shoot(plane: PlaneInstance, value: number, gun = GUN) {
   roll(value);
   G.selected_gun = gun;
-  combat.aa_fire(plane.id);
+  antiAircraft.aa_fire(plane.id);
 }
 
 beforeEach(() => {
@@ -110,11 +111,11 @@ describe('setup (6)', () => {
 
 describe('firing table (table 4)', () => {
   it.each([
-    ["high, same hex", 0, GUN, 5, 6],
-    ["low, same hex", ALT_LOW, GUN, 4, 5],
-    ["low, adjacent", ALT_LOW, ADJACENT, 5, 6],
-    ["very low, same hex", ALT_VERY_LOW, GUN, 3, 4],
-    ["very low, adjacent", ALT_VERY_LOW, ADJACENT, 4, 5],
+    ["high, same hex", ALT_VERY_HIGH, GUN, 5, 6],
+    ["low, same hex", ALT_VERY_LOW, GUN, 4, 5],
+    ["low, adjacent", ALT_VERY_LOW, ADJACENT, 5, 6],
+    ["very low, same hex", ALT_LOWEST, GUN, 3, 4],
+    ["very low, adjacent", ALT_LOWEST, ADJACENT, 4, 5],
   ])('%s', (_name, altitude, at, miss, hit) => {
     const missed = he111({altitude, at});
     setup([missed]);
@@ -128,13 +129,13 @@ describe('firing table (table 4)', () => {
   });
 
   it('cannot reach a high plane on an adjacent hex, nor anything further', () => {
-    setup([he111({altitude: 0, at: ADJACENT}), he111({id: "0.1", altitude: ALT_VERY_LOW, at: FAR})]);
-    expect(actions(combat)).toEqual([]);
+    setup([he111({altitude: ALT_VERY_HIGH, at: ADJACENT}), he111({id: "0.1", altitude: ALT_LOWEST, at: FAR})]);
+    expect(actions(antiAircraft)).toEqual([]);
   });
 
   it('cannot hit in clouds (6.2.5)', () => {
-    setup([he111({altitude: 0, at: CLOUD})], [CLOUD]);
-    expect(actions(combat)).toEqual([]);
+    setup([he111({altitude: ALT_VERY_HIGH, at: CLOUD})], [CLOUD]);
+    expect(actions(antiAircraft)).toEqual([]);
   });
 
   it('destroys a plane that was already damaged (6.1)', () => {
@@ -145,54 +146,64 @@ describe('firing table (table 4)', () => {
   });
 });
 
-describe('firing', () => {
-  it('stops at the combat phase when only a gun can act (6.1)', () => {
-    setup([he111()]);
+describe('firing (6.2)', () => {
+  it('follows the American movement (phase 2)', () => {
+    setup([he111()], [GUN], R_Amer);
     movePlanes.done();
-    expect(goto).toHaveBeenCalledWith("combat");
+    expect(goto).toHaveBeenCalledWith("anti_aircraft");
     expect(G.active).toBe(R_Jap);
   });
 
-  it('is not possible in the German combat phase (6.1)', () => {
+  it('is followed by the enemy fire at the planes on its fire line (5.4), then the American combat (phase 3)', () => {
     setup([he111()], [GUN], R_Amer);
-    // A British plane on the board, or their movement phase would be skipped.
-    G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A40.B40", direction: 0});
-    expect(actions(combat)).toEqual([]);
+    // Facing south, from 2 hexes north of the target.
+    G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A05.B07", direction: 3, altitude: ALT_VERY_LOW});
     movePlanes.done();
-    expect(goto).toHaveBeenCalledWith("move_planes");
+    expect(goto).toHaveBeenLastCalledWith("anti_aircraft");
+    antiAircraft.done();
+    expect(goto).toHaveBeenLastCalledWith("moved_into_firelane");
+    expect(G.active).toBe(R_Jap);
+  });
+
+  it('has no guns to fire after the Japanese movement (phase 5)', () => {
+    setup([he111()], [GUN], R_Jap);
+    G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A40.B40", direction: 0});
+    movePlanes.done();
+    expect(goto).not.toHaveBeenCalledWith("anti_aircraft");
   });
 
   it('offers the guns, and the targets of the selected one', () => {
     setup([he111(), he111({id: "0.1", at: FAR})], [GUN]);
-    expect(actions(combat)).toEqual([["select_gun", GUN]]);
-    combat.select_gun(GUN);
-    expect(actions(combat)).toEqual([["select_gun", GUN], ["aa_fire", "0.0"]]);
+    expect(actions(antiAircraft)).toEqual([["select_gun", GUN]]);
+    antiAircraft.select_gun(GUN);
+    expect(actions(antiAircraft)).toEqual([["select_gun", GUN], ["aa_fire", "0.0"]]);
   });
 
-  it('selecting a plane drops the gun, and the other way around', () => {
-    setup([he111()]);
-    combat.select_gun(GUN);
-    combat.select_plane("1.0");
-    expect(G.selected_gun).toBeUndefined();
-    combat.select_gun(GUN);
-    expect(G.selected_plane).toBeUndefined();
-    expect(G.selected_gun).toBe(GUN);
-  });
-
-  it('one shot per gun (6.2.1), renewed with the next stage', () => {
+  it('one shot per gun in a stage (6.3.1), renewed in the next AA phase', () => {
     const target = he111();
     setup([target]);
     shoot(target, 1);
-    expect(actions(combat)).toEqual([]);
+    expect(G.aa_fired).toEqual([GUN]);
+    expect(actions(antiAircraft)).toEqual([]);
     roll(6);
     G.selected_gun = GUN;
-    combat.aa_fire(target.id);
+    antiAircraft.aa_fire(target.id);
     expect(target.damaged).toBeUndefined();
-    combat.done();
+    G.active = R_Amer;
+    endMovement();
     expect(G.aa_fired).toEqual([]);
+    expect(goto).toHaveBeenCalledWith("anti_aircraft");
   });
 
-  it('many guns can fire at one plane (6.2.2)', () => {
+  it('ends the phase once no gun has a target left', () => {
+    const target = he111();
+    setup([target]);
+    shoot(target, 1);
+    expect(goto).not.toHaveBeenCalledWith("anti_aircraft");
+    expect(G.active).not.toBe(R_Jap);
+  });
+
+  it('many guns can fire at one plane (6.3.2)', () => {
     const target = he111();
     setup([target], [GUN, ADJACENT]);
     shoot(target, 5);
@@ -200,10 +211,12 @@ describe('firing', () => {
     expect(target.destroyed).toBe(true);
   });
 
-  it('can be declined (6.2.4)', () => {
-    setup([he111()]);
-    combat.done();
-    expect(G.active).toBe(R_Amer);
+  it('can be declined (6.3.4)', () => {
+    const target = he111();
+    setup([target]);
+    antiAircraft.done();
+    expect(target.damaged).toBeUndefined();
+    expect(G.aa_fired).toEqual([]);
   });
 });
 

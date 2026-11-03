@@ -1,6 +1,6 @@
 import type {PlaneInstance} from "../types";
 import {G, R_Jap, R_Amer, ROLES} from "../globals";
-import {altitudeOf} from "../game/altitude";
+import {ALT_VERY_HIGH, ALTITUDE_ACTIONS, altitudeHandlers, altitudeOf} from "../game/altitude";
 import {hexesAround} from "../game/scenarios";
 import {select_plane} from "./select_plane";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
@@ -24,8 +24,21 @@ function queue() {
 function hexesForNext(): string[] {
   const next = queue()[0]
   if (!next) return []
-  // 4.2.1: every plane starts flying high.
-  return hexesAround(next.center, next.radius).filter(hex => !isOccupiedAt(hex, 0))
+  // 9.0.3: set up at the top altitude, then moved to the one the player chooses.
+  return hexesAround(next.center, next.radius).filter(hex => !isOccupiedAt(hex, ALT_VERY_HIGH))
+}
+
+// 9.0.3, 4.2.4: any altitude still free on the plane's hex.
+function canPlaceAt(plane: PlaneInstance, altitude: number): boolean {
+  return altitude !== altitudeOf(plane) && !isOccupiedAt(plane.at, altitude)
+}
+
+function setAltitude(altitude: number) {
+  const plane = selectedPlaneOfTheActiveSide()
+  if (!plane || !canPlaceAt(plane, altitude)) return
+  push_undo()
+  if (altitude === ALT_VERY_HIGH) delete plane.altitude
+  else plane.altitude = altitude
 }
 
 // 9.3: the players set up their planes on the starting hexes, the British first:
@@ -37,13 +50,15 @@ export const placePlanes = {
     const next = queue()[0]
     prompt(next
       ? `Rozstaw samoloty: ${next.plane.nazwa} – pozostało: ${queue().length}`
-      : "Rozstawiono samoloty – możesz jeszcze obrócić wybrany samolot")
+      : "Rozstawiono samoloty – możesz jeszcze obrócić wybrany samolot lub zmienić jego wysokość")
     hexesForNext().forEach(hex => action("place_plane", hex))
     button("next_type", queue().some(it => it.plane !== next?.plane))
     G.board.planes[G.active].forEach(plane => action("select_plane", plane.id))
-    if (selectedPlaneOfTheActiveSide()) {
+    const selected = selectedPlaneOfTheActiveSide()
+    if (selected) {
       button("turn_left")
       button("turn_right")
+      for (const [verb, level] of ALTITUDE_ACTIONS) button(verb, canPlaceAt(selected, level))
     }
     button("done", queue().length === 0)
   },
@@ -68,6 +83,8 @@ export const placePlanes = {
     const others = list.filter(it => it.plane !== first.plane)
     G.to_place![G.active] = [...others, ...list.filter(it => it.plane === first.plane)]
   },
+
+  ...altitudeHandlers(setAltitude),
 
   turn_left() {
     turnSelected(-1)
