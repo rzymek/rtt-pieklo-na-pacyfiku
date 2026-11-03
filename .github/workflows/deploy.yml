@@ -1,0 +1,59 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time, and a newer push never interrupts one halfway.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+# DEPLOY_HOST, DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS are set by
+# 04-module-deploy-key.sh from the deploy-oracle repository.
+env:
+  DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+  # Stands in for the server checkout: the build goes to $RTT_DIR/public/lew-morski.
+  # Outside the workspace, so lint and tsc never see the output.
+  RTT_DIR: ${{ github.workspace }}/../rtt
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # bundle, tsc, tests and lint: a failure in any of them stops the deploy
+      - run: mkdir -p "$RTT_DIR/public" && pnpm run build
+
+      - name: Deploy
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The server ignores the command line: the key can only run rtt-deploy-module.
+          tar -czf - -C "$RTT_DIR/public/lew-morski" . | ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "rtt-deploy@$DEPLOY_HOST"
+
+      - name: Check the site
+        run: curl -fsS -o /dev/null -m 20 "https://$DEPLOY_HOST/pieklo-na-pacyfiku/rules.js"
