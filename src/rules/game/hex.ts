@@ -2,9 +2,13 @@ import {DIR_OFFSETS, hexStep, isEdgeHex as isEdgeHexOn, isOffBoardStep as isOffB
 import {Board, PlaneInstance} from "../types";
 import {altitudeOf, maxSpeedAt, planeStats} from "./altitude";
 
+// Columns A01-A56; the odd ones are a hex longer, sticking out at the top and at the bottom.
 export function isOnBoard(a: number, b: number) {
-  const bottom = Math.floor(a / 2)
-  return a >= 0 && a <= 43 && b >= bottom && b <= bottom + 28
+  return a >= 1 && a <= 56 && b >= bottomOf(a) && b <= Math.floor((a + 1) / 2) + 37
+}
+
+function bottomOf(a: number) {
+  return Math.floor(a / 2) + 1
 }
 
 function isOffBoardStep(hex: string, direction: number): boolean {
@@ -32,7 +36,7 @@ function crossesSouthEdge(hex: string, direction: number): boolean {
   const [a, b] = parseHex(hex) as [number, number]
   const [da, db] = DIR_OFFSETS[direction]
   const na = a + da
-  return na >= 0 && na <= 43 && b + db < Math.floor(na / 2)
+  return na >= 1 && na <= 56 && b + db < bottomOf(na)
 }
 
 export interface Exit {

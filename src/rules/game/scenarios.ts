@@ -98,9 +98,9 @@ export const SCENARIOS: Record<string, Scenario> = {
         {stage: 5, plane: Spit, at: 'A07.B31', direction: S},
         {stage: 7, plane: Spit, at: 'A01.B01', direction: NE},
         {stage: 7, plane: Spit, at: 'A01.B02', direction: NE},
-        {stage: 15, plane: HurL, at: 'A26.B13', direction: N},
+        {stage: 15, plane: HurL, at: 'A26.B14', direction: N},
         {stage: 15, plane: Hur, at: 'A27.B14', direction: N},
-        {stage: 15, plane: Hur, at: 'A28.B14', direction: N},
+        {stage: 15, plane: Hur, at: 'A28.B15', direction: N},
       ],
       aa_guns: 24,
       min_vp: 33,
@@ -137,9 +137,8 @@ export const SCENARIOS: Record<string, Scenario> = {
 
 export function boardHexes(): string[] {
   const hexes: string[] = []
-  for (let a = 0; a <= 43; a++) {
-    const bottom = Math.floor(a / 2)
-    for (let b = bottom; b <= bottom + 28; b++) hexes.push(hexId(a, b))
+  for (let a = 1; a <= 56; a++) {
+    for (let b = 1; b <= 70; b++) if (isOnBoard(a, b)) hexes.push(hexId(a, b))
   }
   return hexes
 }

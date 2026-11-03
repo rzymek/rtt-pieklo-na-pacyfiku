@@ -187,28 +187,28 @@ describe('8.1: leaving through the south edge', () => {
   const canLeave = (it: PlaneInstance) => canLeaveSouth(it);
 
   it('straight ahead, from the edge', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B10", direction: S}))).toBe(true);
+    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: S}))).toBe(true);
   });
 
   it('straight ahead, within the range', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B15", direction: S}))).toBe(true);
+    expect(canLeave(plane("0.0", "ME109", {at: "A20.B16", direction: S}))).toBe(true);
   });
 
   it('not beyond the range', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B16", direction: S}))).toBe(false);
+    expect(canLeave(plane("0.0", "ME109", {at: "A20.B17", direction: S}))).toBe(false);
   });
 
   it('not when flying away from the edge', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B10", direction: N}))).toBe(false);
+    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: N}))).toBe(false);
   });
 
   it('after a turn', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B10", direction: NE}))).toBe(true);
+    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: NE}))).toBe(true);
   });
 
   it('not through a plane at the same altitude', () => {
-    const bomber = plane("0.0", "HE111", {at: "A20.B12", direction: S});
+    const bomber = plane("0.0", "HE111", {at: "A20.B13", direction: S});
     expect(canLeave(bomber)).toBe(true);
-    expect(canLeaveSouth(bomber, {[R_Amer]: [bomber, plane("0.1", "ME109", {at: "A20.B11"})]})).toBe(false);
+    expect(canLeaveSouth(bomber, {[R_Amer]: [bomber, plane("0.1", "ME109", {at: "A20.B12"})]})).toBe(false);
   });
 });

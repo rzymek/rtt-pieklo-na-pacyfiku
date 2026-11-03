@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {CLOUD_HEXES} from "virtual:map-clouds";
+import {CLOUD_HEXES} from "./terrain";
 import {planes} from "../globals";
 import type {PlaneInstance} from "../types";
 import type {PlaneData} from "./data";

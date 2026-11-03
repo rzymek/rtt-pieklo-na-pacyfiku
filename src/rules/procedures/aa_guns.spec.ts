@@ -15,12 +15,12 @@ vi.mock("../globals", async importOriginal => ({
   V: {unmoved: []},
 }));
 
-const GUN = "A20.B20"
-const ADJACENT = "A20.B21"
-const FAR = "A20.B22"
-const RIVER = "A08.B25"
-const CLOUD = "A30.B36"
-const CLOUD_EDGE = "A30.B34"
+const GUN = "A05.B05"
+const ADJACENT = "A05.B06"
+const FAR = "A05.B07"
+const SEA = "A20.B20"
+const CLOUD = "A33.B28"
+const CLOUD_EDGE = "A33.B24"
 
 const goto = vi.fn();
 let dice: number[];
@@ -81,14 +81,14 @@ describe('setup (6)', () => {
     expect(call).toHaveBeenCalledWith("place_planes");
   });
 
-  it('allows one gun per hex, not on a river or in clouds (6.0.1, 6.0.2)', () => {
+  it('allows one gun per hex, on land only (6.1.2)', () => {
     Object.assign(L, {count: 5});
     setup([], []);
-    for (const hex of [GUN, GUN, RIVER, CLOUD, CLOUD_EDGE]) placeAaGuns.place_gun(hex);
+    for (const hex of [GUN, GUN, SEA, CLOUD, CLOUD_EDGE]) placeAaGuns.place_gun(hex);
     expect(G.aa_guns).toEqual([GUN]);
     const offered = actions(placeAaGuns).map(it => it[1]);
     expect(offered).not.toContain(GUN);
-    expect(offered).not.toContain(RIVER);
+    expect(offered).not.toContain(SEA);
     expect(offered).not.toContain(CLOUD);
     expect(offered).not.toContain(CLOUD_EDGE);
     expect(offered).toContain(ADJACENT);

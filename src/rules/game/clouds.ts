@@ -1,4 +1,4 @@
-import {CLOUD_EDGE_HEXES, CLOUD_HEXES} from "virtual:map-clouds";
+import {CLOUD_EDGE_HEXES, CLOUD_HEXES} from "./terrain";
 import type {PlaneInstance} from "../types";
 import {ALT_HIGH, altitudeOf} from "./altitude";
 

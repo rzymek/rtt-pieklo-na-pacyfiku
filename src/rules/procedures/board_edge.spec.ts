@@ -53,7 +53,7 @@ beforeEach(() => {
   stubFramework({goto, random: () => dice.shift()});
 });
 
-const EAST_EDGE = "A43.B30";
+const EAST_EDGE = "A56.B40";
 const EAST = 2; // DIR_OFFSETS: a+1
 
 function leave(from: PlaneInstance, hex: string) {
@@ -66,7 +66,7 @@ describe('board limits', () => {
   it('offers no flights off the board', () => {
     const it = plane("0.0", "ME109", {at: EAST_EDGE, direction: EAST});
     const flights = flightsFor(it, {[R_Amer]: [it]});
-    expect(Object.keys(flights).every(hex => parseInt(hex.slice(1)) <= 43)).toBe(true);
+    expect(Object.keys(flights).every(hex => parseInt(hex.slice(1)) <= 56)).toBe(true);
     expect(exitsFor(it, {[R_Amer]: [it]})).toContainEqual({hex: EAST_EDGE, south: false});
   });
 
@@ -112,10 +112,10 @@ describe('4.3: leaving the board', () => {
 
   describe('German, through the south edge (8.1)', () => {
     const south = () => {
-      const it = plane("0.0", "HE111", {at: "A20.B10", direction: S});
+      const it = plane("0.0", "HE111", {at: "A20.B11", direction: S});
       setup([it, plane("0.1", "HE111", {at: "A30.B30"})], [plane("1.0", "Spit", {at: "A10.B20"})]);
       dice = [];
-      leave(it, "A20.B10");
+      leave(it, "A20.B11");
       return it;
     };
 
@@ -125,7 +125,7 @@ describe('4.3: leaving the board', () => {
     });
 
     it('may skip the exit hex when not coming back', () => {
-      const it = plane("0.0", "HE111", {at: "A20.B10", direction: S});
+      const it = plane("0.0", "HE111", {at: "A20.B11", direction: S});
       setup([it, plane("0.1", "HE111", {at: "A30.B30"})], [plane("1.0", "Spit", {at: "A10.B20"})]);
       G.selected_plane = it.id;
       movePlanes.leave_board();
@@ -138,7 +138,7 @@ describe('4.3: leaving the board', () => {
     it('may come back', () => {
       const it = south();
       movePlanes.leave_return();
-      expect(G.off_board).toEqual([{plane: it, return_stage: 8, from: "A20.B10"}]);
+      expect(G.off_board).toEqual([{plane: it, return_stage: 8, from: "A20.B11"}]);
       expect(it.left_board).toBeUndefined();
     });
 
@@ -161,7 +161,7 @@ describe('4.3: leaving the board', () => {
 
   it('a plane waiting to return is out of reach, yet still counts as a unit', () => {
     const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
-    setup([plane("0.0", "HE111", {at: "A42.B30", direction: EAST})], [it], R_Jap);
+    setup([plane("0.0", "HE111", {at: "A55.B40", direction: EAST})], [it], R_Jap);
     leave(it, EAST_EDGE);
     expect(fireTarget(G.board.planes[R_Amer][0], R_Amer)).toBeNull();
     G.board.planes[R_Jap] = [];
@@ -170,22 +170,22 @@ describe('4.3: leaving the board', () => {
 
   it('comes back after 5 stages, on a free edge hex within 5 hexes, then moves as usual (4.3.1)', () => {
     const it = plane("0.0", "HE111", {at: EAST_EDGE});
-    setup([plane("0.1", "HE111", {at: "A43.B31"})], [plane("1.0", "Spit", {at: "A10.B20"})], R_Jap);
+    setup([plane("0.1", "HE111", {at: "A56.B41"})], [plane("1.0", "Spit", {at: "A10.B20"})], R_Jap);
     G.off_board = [{plane: it, return_stage: 4, from: EAST_EDGE}];
     endCombat();
     expect(G.stage).toBe(4);
     expect(goto).toHaveBeenCalledWith("return_planes");
 
     const hexes = returnHexes(G.off_board[0]);
-    expect(hexes).toContain("A43.B35");
-    expect(hexes).not.toContain("A43.B36");
-    expect(hexes).not.toContain("A42.B30");
-    expect(hexes).not.toContain("A43.B31");
+    expect(hexes).toContain("A56.B45");
+    expect(hexes).not.toContain("A56.B46");
+    expect(hexes).not.toContain("A55.B40");
+    expect(hexes).not.toContain("A56.B41");
 
-    returnPlanes.return_hex("A42.B32");
+    returnPlanes.return_hex("A55.B42");
     expect(it.at).toBe(EAST_EDGE);
-    returnPlanes.return_hex("A43.B35");
-    expect(it.at).toBe("A43.B35");
+    returnPlanes.return_hex("A56.B45");
+    expect(it.at).toBe("A56.B45");
     expect(G.board.planes[R_Amer]).toContain(it);
     expect(nextToReturn()).toBeUndefined();
 
@@ -198,14 +198,14 @@ describe('4.3: leaving the board', () => {
 
   it('shows the players the free hexes a plane may come back to', () => {
     const it = plane("0.0", "HE111", {at: EAST_EDGE});
-    setup([plane("0.1", "HE111", {at: "A43.B31"})], []);
+    setup([plane("0.1", "HE111", {at: "A56.B41"})], []);
     G.off_board = [{plane: it, return_stage: 8, from: EAST_EDGE}];
     on_view();
     const [waiting] = V.off_board!;
     expect(waiting).toMatchObject({side: R_Amer, return_stage: 8});
     expect(waiting.hexes).toEqual(returnHexes(G.off_board[0]));
-    expect(waiting.hexes).toContain("A43.B35");
-    expect(waiting.hexes).not.toContain("A43.B31");
+    expect(waiting.hexes).toContain("A56.B45");
+    expect(waiting.hexes).not.toContain("A56.B41");
   });
 
   it('does not come back too early, and reinforcements get an unused id', () => {

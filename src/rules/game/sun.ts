@@ -20,11 +20,11 @@ export function sunEdgeFor(roll: number): SunEdge {
 export function sunHexes(edge: SunEdge): string[] {
   switch (edge) {
     case "W":
-      return range(9).map(b => hexId(0, b))
+      return range(15).map(b => hexId(1, b))
     case "E":
-      return range(30).map(b => hexId(43, b))
+      return range(42).map(b => hexId(56, b))
     case "S":
-      return range(17).map(a => hexId(a, Math.floor(a / 2)))
+      return range(24).map(a => hexId(a, Math.floor(a / 2) + 1))
   }
 }
 

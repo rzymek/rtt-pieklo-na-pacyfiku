@@ -36,18 +36,18 @@ describe('placing the sun (5.0.1)', () => {
 
 describe('firing into the sun (5.0.1)', () => {
   it.each([
-    ["W", "A05.B14", NW, 1],
-    ["W", "A05.B14", SW, 1],
+    ["W", "A05.B20", NW, 1],
+    ["W", "A05.B20", SW, 1],
     ["W", "A05.B10", SW, 0],
-    ["W", "A05.B14", N, 0],
-    ["W", "A05.B14", NE, 0],
-    ["E", "A40.B35", NE, 1],
-    ["E", "A40.B35", SE, 1],
-    ["E", "A40.B35", N, 0],
-    ["S", "A20.B20", S, 1],
-    ["S", "A20.B20", N, 0],
-    ["S", "A20.B20", SE, 0],
-    ["S", "A20.B20", SW, 0],
+    ["W", "A05.B20", N, 0],
+    ["W", "A05.B20", NE, 0],
+    ["E", "A50.B44", NE, 1],
+    ["E", "A50.B44", SE, 1],
+    ["E", "A50.B44", N, 0],
+    ["S", "A28.B25", S, 1],
+    ["S", "A28.B25", N, 0],
+    ["S", "A28.B25", SE, 0],
+    ["S", "A28.B25", SW, 0],
     ["S", "A10.B20", S, 0],
   ] as const)('%s edge, from %s, direction %i: -%i', (edge, at, direction, penalty) => {
     G.sun = edge;
@@ -56,15 +56,15 @@ describe('firing into the sun (5.0.1)', () => {
 
   it('lowers the attack strength', () => {
     G.sun = "S";
-    expect(rollShot(spit("A20.B20", S), clearTarget, 1).atk).toBe(3);
-    expect(rollShot(spit("A20.B20", N), clearTarget, 1).atk).toBe(4);
+    expect(rollShot(spit("A28.B25", S), clearTarget, 1).atk).toBe(3);
+    expect(rollShot(spit("A28.B25", N), clearTarget, 1).atk).toBe(4);
   });
 
   it('does not count when firing into a cloud (5.0.3)', () => {
     G.sun = "S";
     const attacker = spit("A30.B20", S);
-    expect(sunPenalty(attacker, spit("A30.B36", N))).toBe(0);
-    expect(sunPenalty(attacker, spit("A30.B34", N))).toBe(0);
+    expect(sunPenalty(attacker, spit("A33.B28", N))).toBe(0);
+    expect(sunPenalty(attacker, spit("A33.B24", N))).toBe(0);
   });
 
   it('does nothing without a sun, as in an older saved game', () => {
@@ -77,16 +77,16 @@ describe('AA guns (6.2.5)', () => {
 
   it('cannot hit a plane against the sun', () => {
     G.sun = "W";
-    expect(aaHitFrom("A05.B14", low("A04.B14"))).toBeNull();
+    expect(aaHitFrom("A05.B20", low("A04.B20"))).toBeNull();
   });
 
   it('can hit it from the other side', () => {
     G.sun = "W";
-    expect(aaHitFrom("A03.B14", low("A04.B14"))).toBe(6);
+    expect(aaHitFrom("A03.B20", low("A04.B20"))).toBe(6);
   });
 
   it('can hit a plane right above the gun', () => {
     G.sun = "W";
-    expect(aaHitFrom("A04.B14", low("A04.B14"))).toBe(5);
+    expect(aaHitFrom("A04.B20", low("A04.B20"))).toBe(5);
   });
 });

@@ -37,5 +37,5 @@ it('Wariant 5 targets all 12 strategic points, including those of the other scen
 it('hexesAround stays on the board, nearest first', () => {
   expect(hexesAround('A10.B08', 1)).toHaveLength(7);
   expect(hexesAround('A10.B08', 1)[0]).toBe('A10.B08');
-  expect(hexesAround('A00.B00', 1).sort()).toEqual(['A00.B00', 'A00.B01', 'A01.B00', 'A01.B01']);
+  expect(hexesAround('A01.B01', 1).sort()).toEqual(['A01.B01', 'A01.B02', 'A02.B02']);
 });

@@ -4,8 +4,8 @@ import type {PlaneInstance} from "../types";
 import {ALT_LOW} from "./altitude";
 import {fireLineHexes, firstOnFireLine, rollShot} from "./combat";
 
-const CLOUD = "A30.B36"
-const EDGE = "A30.B34"
+const CLOUD = "A33.B28"
+const EDGE = "A33.B24"
 const CLEAR = "A20.B20"
 
 let dice: number[];
@@ -87,7 +87,7 @@ describe('fire line (5.0.5)', () => {
   });
 
   it('has 1 hex in a cloud', () => {
-    expect(fireLineHexes(spit(CLOUD))).toEqual(["A30.B37"]);
+    expect(fireLineHexes(spit(CLOUD))).toEqual(["A33.B29"]);
   });
 
   it('has 5 hexes below a cloud (5.0.4)', () => {
@@ -96,9 +96,9 @@ describe('fire line (5.0.5)', () => {
 
   it('keeps a plane in a cloud from reaching further targets', () => {
     const shooter = spit(CLOUD);
-    const allPlanes = {[R_Amer]: [he111("A30.B38")], [R_Jap]: [shooter]};
+    const allPlanes = {[R_Amer]: [he111("A33.B30")], [R_Jap]: [shooter]};
     expect(firstOnFireLine(shooter, allPlanes)).toBeNull();
-    allPlanes[R_Amer][0].at = "A30.B37";
+    allPlanes[R_Amer][0].at = "A33.B29";
     expect(firstOnFireLine(shooter, allPlanes)?.distance).toBe(1);
   });
 });
