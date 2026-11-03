@@ -3,7 +3,6 @@ import {hexStep} from "@rzymek/rally-the-troops-module/rules"
 import {altitudeOf, planeStats} from "./altitude.js"
 import {cloudPenalty, isInCloud} from "./clouds.js"
 import {sunPenalty} from "./sun.js"
-import {scorePlaneLost} from "./victory.js"
 
 type Range = [number, number] | null
 const R = (from: number, to = from): Range => [from, to]
@@ -173,7 +172,6 @@ export function applyHit(targetPlane: PlaneInstance, damage: number, downed = fa
   if (downed || targetPlane.damage >= endurance) {
     targetPlane.damage = endurance
     targetPlane.destroyed = true
-    scorePlaneLost(targetPlane)
     return 'zestrzelony'
   }
   const left = `pozostała wytrzymałość ${endurance - targetPlane.damage}/${endurance}`

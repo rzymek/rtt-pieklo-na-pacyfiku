@@ -1,6 +1,7 @@
 import {G, L, R, R_Amer, R_Jap, V} from "../globals";
 import {gunsOf} from "../procedures/aa_guns";
 import {shipType} from "../game/ships";
+import {currentOutcome, describeOutcome, tally} from "../game/victory";
 import {movesMapFor} from "../game/hex";
 import {fireLineHexes} from "../game/combat";
 import {selectedPlaneOfTheActiveSide} from "../procedures/selectedPlaneOfTheActiveSide";
@@ -25,8 +26,8 @@ export function on_view() {
   V.ships = (G.ships ?? []).map(ship => ({...ship, wytrzymalosc: shipType(ship).wytrzymalosc}))
   V.aa_fired = G.aa_fired
   V.selected_gun = G.selected_gun
-  V.vp = G.vp
-  V.min_vp = G.min_vp
+  V.lost = tally().lost
+  V.standing = describeOutcome(currentOutcome())
   V.sun = G.sun
   V.sun_hexes = G.sun && sunHexes(G.sun)
   if (R === G.active) {

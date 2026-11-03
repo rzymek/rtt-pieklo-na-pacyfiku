@@ -4,6 +4,7 @@ import {ALT_VERY_HIGH, ALTITUDE_ACTIONS, altitudeHandlers, altitudeOf} from "../
 import {hexesAround} from "../game/scenarios";
 import {select_plane} from "./select_plane";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
+import {startMovement} from "./phases";
 
 export function isOccupiedAt(hex: string, altitude: number): boolean {
   return Object.values(G.board.planes).flat()
@@ -103,7 +104,7 @@ export const placePlanes = {
       G.active = R_Amer
     } else {
       delete G.to_place
-      goto("move_planes")
+      startMovement()
     }
   },
 }

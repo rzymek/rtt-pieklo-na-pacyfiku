@@ -1,6 +1,6 @@
 import {G, ROLES, V} from "../globals.js"
-import {exitsFor, flightsFor, possibleMovesFor} from "../game/hex.js"
-import {scorePlaneLost} from "../game/victory";
+import {Edge, exitsFor, flightsFor, possibleMovesFor} from "../game/hex.js"
+import {SCENARIOS} from "../game/scenarios";
 import {ALTITUDE_ACTIONS, ALTITUDE_NAMES, altitudeHandlers, altitudeOf, canChangeAltitude} from "../game/altitude";
 import {endMovement} from "./phases";
 import {select_plane} from "./select_plane.js";
@@ -29,6 +29,12 @@ export function isForced(plane: PlaneInstance): boolean {
 
 function exits(plane: PlaneInstance) {
   return exitsFor(plane, G.board.planes, G.selected_altitude, isForced(plane))
+}
+
+// 9: the scenario may count a plane leaving through an edge as shot down, or make it come back.
+function exitRule(side: number, edge: Edge): "lost" | "return" | undefined {
+  const rules = G.scenario === undefined ? [] : SCENARIOS[G.scenario].exits ?? []
+  return rules.find(it => it.side === side && it.edges.includes(edge))?.rule
 }
 
 function takeOffBoard(plane: PlaneInstance, from: string) {
@@ -64,7 +70,6 @@ function collide(plane: PlaneInstance) {
   log(`${plane.plane.nazwa} wlatuje na zajęty heks ${plane.at} [rzut:${roll}] → zderzenie`)
   for (const it of [plane, ...others]) {
     it.destroyed = true
-    scorePlaneLost(it, {shotDown: false})
   }
 }
 
@@ -143,8 +148,19 @@ export const movePlanes = {
     const exit = plane && G.leaving ? exits(plane).find(it => it.hex === hex) : undefined
     if (!plane || !exit) return
     push_undo()
-    delete G.leaving
-    G.leaving_from = hex
+    const rule = exitRule(G.active, exit.edge)
+    if (rule === "lost") {
+      plane.at = hex
+      plane.altitude = G.selected_altitude ?? altitudeOf(plane)
+      plane.destroyed = true
+      log(`${ROLES[G.active]}: ${plane.plane.nazwa} opuszcza planszę na ${hex} – uznany za zestrzelony`)
+      clearSelection()
+    } else if (rule === "return") {
+      takeOffBoard(plane, hex)
+    } else {
+      delete G.leaving
+      G.leaving_from = hex
+    }
   },
 
   // 4.3: back in 5 stages.

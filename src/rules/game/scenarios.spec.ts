@@ -2,6 +2,8 @@ import {describe, expect, it} from "vitest";
 import svg from "../../play/map.svg?raw";
 import {hexesAround, SCENARIOS} from "./scenarios";
 import {data} from "./data";
+import {LAND_HEXES} from "./terrain";
+import {SHIP_TYPES, shipHexes} from "./ships";
 
 const MAP_HEXES = new Set([...svg.matchAll(/id="(A\d+\.B\d+)"/g)].map(m => m[1]));
 
@@ -16,7 +18,23 @@ describe.each(Object.entries(SCENARIOS))('%s', (_name, scenario) => {
         expect(hexesAround(center, radius).length).toBeGreaterThanOrEqual(planes.length);
       }
     }
-    expect(new Set(starting).size).toBe(starting.length);
+    // 4.2.4, 9.0.3: up to five planes to a hex, one at each altitude.
+    expect(new Set(starting).size * 5).toBeGreaterThanOrEqual(starting.length);
+  });
+
+  const ships = sides.flatMap(side => (side.ships ?? []).map(({type, from, towards}) => shipHexes(from, towards, SHIP_TYPES[type].dlugosc)));
+
+  it('puts the ships at sea, on the board, apart', () => {
+    const hexes = ships.flat();
+    for (const hex of hexes) {
+      expect(MAP_HEXES).toContain(hex);
+      expect(LAND_HEXES).not.toContain(hex);
+    }
+    expect(new Set(hexes).size).toBe(hexes.length);
+  });
+
+  it('has the strategic objects on land', () => {
+    for (const hex of scenario.targets) expect(LAND_HEXES).toContain(hex);
   });
 
   it('refers to hexes of the map only', () => {

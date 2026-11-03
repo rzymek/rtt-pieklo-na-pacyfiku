@@ -48,18 +48,14 @@ export function onUpdate() {
   // 2.0, 4.3.1: the stage track.
   document.getElementById('turn_info')!.textContent = [
     `Etap ${view.stage}`,
+    // 8.0.1
+    ...(view.standing ? [`Obecnie: ${view.standing}`] : []),
     ...(view.off_board ?? []).map(it => `${it.name}: powrót w etapie ${it.return_stage}`),
   ].join('\n')
 
-  // 8.0
-  for (const side of Object.keys(view.vp ?? {})) {
+  for (const side of Object.keys(view.lost ?? {})) {
     const stat = roles[side]?.stat
-    if (stat) stat.textContent = `${view.vp![Number(side)]} / ${view.min_vp?.[Number(side)]} PZ`
-  }
-
-  for (const [side, planes] of Object.entries(view.board?.planes ?? {})) {
-    const info = roles[side]?.stat.parentElement?.querySelector('.role_info')
-    if (info) info.textContent = `Stracone samoloty: ${planes.filter(plane => plane.destroyed && !plane.left_board).length}`
+    if (stat) stat.textContent = `straty: ${view.lost![Number(side)]}`
   }
 
   drawShips()

@@ -11,7 +11,7 @@ import {isForced, movePlanes} from "./move_planes";
 import {nextToReturn, returnHexes, returnPlanes} from "./return_planes";
 import {endCombat} from "./phases";
 import {combat} from "./combat";
-import {isGameOver} from "../game/victory";
+import {isGameOver, planesLost} from "../game/victory";
 
 vi.mock("../globals", async importOriginal => ({
   ...await importOriginal<typeof import("../globals")>(),
@@ -33,7 +33,6 @@ function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Amer) {
   for (const key of Object.keys(G)) delete (G as any)[key];
   Object.assign(G, {
     active, stage: 3, moved: [], shot: [], flown_over: {}, aa_guns: [], aa_fired: [], off_board: [], targets: [], bombed: [],
-    vp: {[R_Amer]: 0, [R_Jap]: 0}, min_vp: {[R_Amer]: 10, [R_Jap]: 10},
     reinforcements: {[R_Amer]: [], [R_Jap]: []},
     board: {planes: {[R_Amer]: niem, [R_Jap]: bryt}},
   });
@@ -107,12 +106,12 @@ describe('4.3: leaving the board', () => {
       expect(it.left_board).toBeUndefined();
     });
 
-    it('or leave for good, with no points for the enemy', () => {
+    it('or leave for good, not counted as lost (8.0.2)', () => {
       const it = south();
       movePlanes.leave_forever();
       expect(it).toMatchObject({destroyed: true, left_board: true});
       expect(G.off_board).toEqual([]);
-      expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
+      expect(planesLost(R_Amer)).toBe(0);
     });
   });
 
@@ -274,7 +273,7 @@ describe('4.2.6: no free way to fly', () => {
     expect(on.destroyed).toBeUndefined();
   });
 
-  it('a 6 destroys both, costing only the owners their planes', () => {
+  it('a 6 destroys both (4.2.5)', () => {
     const he = boxed();
     G.selected_plane = he.id;
     const on = plane("1.5", "A6M6", {at: "A20.B23"});
@@ -283,7 +282,7 @@ describe('4.2.6: no free way to fly', () => {
     movePlanes.move_hex("A20.B23");
     expect(he.destroyed).toBe(true);
     expect(on.destroyed).toBe(true);
-    expect(G.vp).toEqual({[R_Amer]: -2, [R_Jap]: -1});
+    expect(planesLost(R_Amer)).toBe(1);
   });
 });
 
@@ -346,5 +345,37 @@ describe('undo after the movement phase', () => {
     dice = [0];
     combat.attack();
     expect(clearUndo).toHaveBeenCalled();
+  });
+});
+
+describe('9: the exits of the scenario', () => {
+  const leaving = (side: number, scenario: string) => {
+    const it = side === R_Amer ? plane("0.0", "F4F", {at: "A20.B11", direction: S}) : plane("1.0", "A6M", {at: "A20.B11", direction: S});
+    setup(side === R_Amer ? [it] : [plane("0.0", "F4F", {at: "A40.B40"})], side === R_Jap ? [it] : [plane("1.1", "A6M", {at: "A40.B40"})], side);
+    G.scenario = scenario;
+    leave(it, "A20.B11");
+    return it;
+  };
+
+  it('1: a plane leaving the board counts as shot down', () => {
+    const it = leaving(R_Amer, "1. Atak na Pearl Harbor");
+    expect(it.destroyed).toBe(true);
+    expect(it.left_board).toBeUndefined();
+    expect(planesLost(R_Amer)).toBe(1);
+  });
+
+  it('2: the American bombers may leave only along the column A01', () => {
+    expect(leaving(R_Amer, "2. Kampania powietrzna na Filipinach").destroyed).toBe(true);
+    expect(leaving(R_Jap, "2. Kampania powietrzna na Filipinach").destroyed).toBeUndefined();
+  });
+
+  it('6: the Japanese leaving by the edges of A01.B01 must come back', () => {
+    const it = leaving(R_Jap, "6. Operacja I");
+    expect(G.off_board).toEqual([{plane: it, return_stage: 8, from: "A20.B11"}]);
+  });
+
+  it('otherwise the player chooses', () => {
+    leaving(R_Amer, "6. Operacja I");
+    expect(G.leaving_from).toBe("A20.B11");
   });
 });

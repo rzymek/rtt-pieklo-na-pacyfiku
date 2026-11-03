@@ -58,7 +58,7 @@ export function endCombat() {
   startMovement()
 }
 
-function startMovement() {
+export function startMovement() {
   if (nextToReturn()) return goto("return_planes")
   // A finished game ends once the action is complete (endingGame), so it must not skip on until then.
   if (isGameOver() || G.board.planes[G.active].some(plane => !plane.destroyed)) return goto("move_planes")

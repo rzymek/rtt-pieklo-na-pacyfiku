@@ -66,6 +66,8 @@ export interface View extends BaseViewState<ViewActions> {
   selected_gun?: string
   sun?: SunEdge
   sun_hexes?: string[]
-  vp?: Record<number, number>
-  min_vp?: Record<number, number>
+  // Planes lost, by side.
+  lost?: Record<number, number>
+  // 8.0.1: the outcome if the game ended now.
+  standing?: string
 }

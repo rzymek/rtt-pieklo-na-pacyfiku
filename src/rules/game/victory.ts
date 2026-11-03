@@ -1,41 +1,45 @@
-import type {PlaneInstance} from "../types";
-import {G, R_Jap, R_Amer, ROLES} from "../globals";
-import {otherSide} from "../lifecycle/changeSide";
+import {G, R_Amer, R_Jap} from "../globals";
+import {SCENARIOS} from "./scenarios";
+import {NO_WINNER, Outcome, Tally} from "./outcomes";
+import {shipType} from "./ships";
 
-// Table 1
-const VP_BOMB_ON_TARGET = 3
-const VP_FIGHTER_SHOT_DOWN = 2
-const VP_BOMBER_SHOT_DOWN = 4
-const VP_FIGHTER_LOST = -1
-const VP_BOMBER_LOST = -2
+// The losing side in the genitive: "zwycięstwo Amerykanów".
+const OF_SIDE = ["Amerykanów", "Japończyków"]
 
-// 8.0: the score can go below zero.
-function addVp(side: number, points: number, reason: string) {
-  G.vp ??= {[R_Amer]: 0, [R_Jap]: 0}
-  G.vp[side] += points
-  log(`${ROLES[side]}: ${points > 0 ? "+" : ""}${points} PZ (${reason}) → ${G.vp[side]} PZ`)
+// Planes shot down, or lost otherwise, but not those that left the board for good (8.0.2).
+export function planesLost(side: number): number {
+  return G.board.planes[side].filter(plane => plane.destroyed && !plane.left_board).length
 }
 
-// Table 1: the Me-110 carries bombs, but counts as a fighter.
-// 4.2.6: nobody shot down a plane lost in a collision, so only its owner's score changes.
-export function scorePlaneLost(plane: PlaneInstance, {shotDown = true} = {}) {
-  const name = plane.plane.nazwa
-  const side = parseInt(plane.id)
-  const bomber = !!plane.plane.udzwig_bomb
-  addVp(side, bomber ? VP_BOMBER_LOST : VP_FIGHTER_LOST, `stracony ${name}`)
-  if (shotDown) addVp(otherSide(side), bomber ? VP_BOMBER_SHOT_DOWN : VP_FIGHTER_SHOT_DOWN, `zestrzelony ${name}`)
+export function tally(): Tally {
+  return {
+    lost: {[R_Amer]: planesLost(R_Amer), [R_Jap]: planesLost(R_Jap)},
+    bombed: (G.bombed ?? []).length,
+    ships: G.ships ?? [],
+  }
 }
 
-export function scoreBombOnTarget(hex: string) {
-  addVp(R_Amer, VP_BOMB_ON_TARGET, `bomby na ${hex}`)
+// 8.0.1: the outcome if the game ended now.
+export function currentOutcome(): Outcome {
+  const scenario = G.scenario === undefined ? undefined : SCENARIOS[G.scenario]
+  return scenario ? scenario.victory(tally()) : NO_WINNER
 }
 
-// 9.2
-export function scoreAllTargetsBombed() {
-  if (G.all_targets_vp) addVp(R_Amer, G.all_targets_vp, "zbombardowane wszystkie cele")
+export function describeOutcome({winner, decisive}: Outcome): string {
+  if (winner === null) return "Brak wyraźnego zwycięzcy"
+  return `${decisive ? "Zdecydowane" : "Minimalne"} zwycięstwo ${OF_SIDE[winner]}`
 }
 
-// 8.1: planes yet to come count as well, or a side could lose before they enter.
+function summary(): string {
+  const {lost, bombed, ships} = tally()
+  return [
+    `straty: Amerykanie ${lost[R_Amer]}, Japończycy ${lost[R_Jap]}`,
+    ...(G.targets?.length ? [`zbombardowane cele: ${bombed}/${G.targets.length}`] : []),
+    ...ships.map(ship => `${ship.nazwa}: ${ship.sunk ? "zatopiony" : `uszkodzenia ${ship.damage ?? 0}/${shipType(ship).wytrzymalosc}`}`),
+  ].join(", ")
+}
+
+// 8.0.2: planes yet to come count as well, or a side could lose before they enter.
 function hasUnitsLeft(side: number): boolean {
   return G.board.planes[side].some(plane => !plane.destroyed)
     || (G.to_place?.[side] ?? []).length > 0
@@ -45,32 +49,17 @@ function hasUnitsLeft(side: number): boolean {
     || (G.ships ?? []).some(it => it.side === side && !it.sunk)
 }
 
+// 8.0.2: the game ends once only one player has units left.
 export function isGameOver(): boolean {
   return !hasUnitsLeft(R_Amer) || !hasUnitsLeft(R_Jap)
 }
 
-// 8.2: the fewest points missing, then the larger percentage of the required points. null = a draw.
-// The manual does not say what happens when both sides reach their minimum: the same comparison decides.
-export function winner(vp: Record<number, number>, min: Record<number, number>): number | null {
-  const missing = (side: number) => min[side] - vp[side]
-  // Cross-multiplied percentages, to stay away from comparing floats.
-  const compared = missing(R_Jap) - missing(R_Amer) || vp[R_Amer] * min[R_Jap] - vp[R_Jap] * min[R_Amer]
-  return compared > 0 ? R_Amer : compared < 0 ? R_Jap : null
-}
-
 function endGame() {
-  const vp = G.vp!, min = G.min_vp!
-  const score = [R_Amer, R_Jap].map(side => `${ROLES[side]} ${vp[side]}/${min[side]} PZ`).join(", ")
-  const side = winner(vp, min)
+  const outcome = currentOutcome()
   delete G.selected_plane
   delete G.selected_altitude
   delete G.selected_gun
-  if (side === null) {
-    finish("Draw", `Remis: ${score}`)
-  } else {
-    const kind = vp[side] >= min[side] ? "pełne" : "minimalne"
-    finish(side, `Wygrywają ${ROLES[side]} (${kind} zwycięstwo): ${score}`)
-  }
+  finish(outcome.winner ?? "Draw", `${describeOutcome(outcome)}: ${summary()}`)
 }
 
 export function checkGameEnd() {

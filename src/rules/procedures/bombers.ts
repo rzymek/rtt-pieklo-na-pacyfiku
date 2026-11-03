@@ -5,7 +5,6 @@ import {ALT_HIGH, ALT_LOW, ALT_LOWEST} from "../game/altitude";
 import {damageShip, shipAt} from "../game/ships";
 import {hexStep} from "@rzymek/rally-the-troops-module/rules";
 import {bombGun, hasGun} from "./aa_guns";
-import {scoreAllTargetsBombed, scoreBombOnTarget} from "../game/victory";
 
 // 7.3.1
 const TORPEDO_RANGE = 3
@@ -74,12 +73,8 @@ function useLoad(plane: PlaneInstance, hex: string) {
 
 // 7.2: a strategic object counts as bombed after a hit for at least 1 damage.
 function hitTarget(hex: string) {
-  scoreBombOnTarget(hex)
-  // 7.0.7
   G.bombed ??= []
-  if (set_has(G.bombed, hex)) return
   set_add(G.bombed, hex)
-  if (G.bombed.length === G.targets!.length) scoreAllTargetsBombed()
 }
 
 export function dropBomb(plane: PlaneInstance, hex: string) {

@@ -2,9 +2,11 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
 import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
-import {applyHit} from "./combat";
-import {checkGameEnd, endingGame, winner} from "./victory";
+import {checkGameEnd, describeOutcome, endingGame} from "./victory";
 import {exitsFor} from "./hex";
+import {SCENARIOS} from "./scenarios";
+import type {Tally} from "./outcomes";
+import type {Ship} from "./ships";
 
 vi.mock("../globals", async importOriginal => ({
   ...await importOriginal<typeof import("../globals")>(),
@@ -22,45 +24,72 @@ beforeEach(() => {
   stubFramework({finish});
   for (const key of Object.keys(G)) delete (G as any)[key];
   Object.assign(G, {
-    vp: {[R_Amer]: 0, [R_Jap]: 0},
-    min_vp: {[R_Amer]: 35, [R_Jap]: 23},
     board: {planes: {[R_Amer]: [plane("0.0", "SBD")], [R_Jap]: [plane("1.0", "A6M6")]}},
     targets: ["A01.B01", "A02.B02"],
-    flown_over: {},
     bombed: [],
     aa_guns: [],
   });
 });
 
-describe('table 1', () => {
+function outcome(scenario: string, tally: Partial<Tally>) {
+  return describeOutcome(SCENARIOS[scenario].victory({lost: {[R_Amer]: 0, [R_Jap]: 0}, bombed: 0, ships: [], ...tally}));
+}
+
+const lost = (amer: number, jap: number) => ({lost: {[R_Amer]: amer, [R_Jap]: jap}});
+
+describe('8.0.1: the tables of the scenarios', () => {
   it.each([
-    ["1.0", "A6M6", {[R_Amer]: 2, [R_Jap]: -1}],
-    ["0.0", "SBD", {[R_Amer]: -2, [R_Jap]: 4}],
-    ["0.0", "B25", {[R_Amer]: -2, [R_Jap]: 4}],
-    ["0.0", "F4F", {[R_Amer]: -1, [R_Jap]: 2}],
-  ] as const)('losing plane %s %s', (id, type, expected) => {
-    applyHit(plane(id, type), 99);
-    expect(G.vp).toEqual(expected);
+    [4, 0, "Zdecydowane zwycięstwo Japończyków"],
+    [3, 0, "Zdecydowane zwycięstwo Japończyków"],
+    [3, 1, "Minimalne zwycięstwo Japończyków"],
+    [2, 2, "Brak wyraźnego zwycięzcy"],
+    [0, 2, "Minimalne zwycięstwo Amerykanów"],
+    [1, 4, "Zdecydowane zwycięstwo Amerykanów"],
+  ])('1: %i American, %i Japanese planes lost: %s', (amer, jap, expected) => {
+    expect(outcome("1. Atak na Pearl Harbor", lost(amer, jap))).toBe(expected);
   });
 
-  it('a damaged plane scores nothing', () => {
-    applyHit(plane("1.0", "A6M6"), 1);
-    expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
+  it.each([
+    [8, 0, "Zdecydowane zwycięstwo Amerykanów"],
+    [5, 0, "Minimalne zwycięstwo Amerykanów"],
+    [5, 2, "Brak wyraźnego zwycięzcy"],
+    [1, 2, "Minimalne zwycięstwo Japończyków"],
+    [0, 4, "Zdecydowane zwycięstwo Japończyków"],
+  ])('2: %i objects bombed, %i bombers lost: %s', (bombed, amer, expected) => {
+    expect(outcome("2. Kampania powietrzna na Filipinach", {bombed, ...lost(amer, 0)})).toBe(expected);
   });
 
-  it('the score can go below zero (8.0)', () => {
-    applyHit(plane("0.0", "SBD"), 99);
-    expect(G.vp![R_Amer]).toBe(-2);
+  const ship = (overrides: Partial<Ship> = {}): Ship =>
+    ({id: "0.s0", side: R_Amer, type: "PANCERNIK", nazwa: "Prince of Wales", hexes: [], ...overrides});
+
+  it.each([
+    [{sunk: true, damage: 26}, 3, "Zdecydowane zwycięstwo Japończyków"],
+    [{sunk: true, damage: 26}, 6, "Minimalne zwycięstwo Japończyków"],
+    [{sunk: true, damage: 26}, 7, "Brak wyraźnego zwycięzcy"],
+    [{damage: 13}, 4, "Brak wyraźnego zwycięzcy"],
+    [{damage: 13}, 5, "Minimalne zwycięstwo Amerykanów"],
+    [{damage: 13}, 9, "Zdecydowane zwycięstwo Amerykanów"],
+    [{damage: 12}, 0, "Zdecydowane zwycięstwo Amerykanów"],
+  ])('3: the battleship %o, %i Japanese planes lost', (state, jap, expected) => {
+    expect(outcome("3. Bitwa pod Kuantan", {ships: [ship(state)], ...lost(0, jap)})).toBe(expected);
+  });
+
+  it('6: 2 for an object, 10 for a transport sunk, less 2 for a plane lost', () => {
+    const transport = (sunk: boolean): Ship => ({id: "0.s1", side: R_Amer, type: "TRANSPORTOWIEC", nazwa: "Statek", hexes: [], sunk});
+    expect(outcome("6. Operacja I", {bombed: 2, ships: [transport(true)], ...lost(0, 0)})).toBe("Zdecydowane zwycięstwo Japończyków");
+    expect(outcome("6. Operacja I", {bombed: 3, ships: [transport(false)], ...lost(0, 0)})).toBe("Minimalne zwycięstwo Japończyków");
+    expect(outcome("6. Operacja I", {bombed: 0, ...lost(0, 2)})).toBe("Minimalne zwycięstwo Amerykanów");
+    expect(outcome("6. Operacja I", {bombed: 0, ...lost(0, 7)})).toBe("Zdecydowane zwycięstwo Amerykanów");
   });
 });
 
-describe('8.1: end of the game', () => {
+describe('8.0.2: end of the game', () => {
   it('goes on while both sides have planes', () => {
     checkGameEnd();
     expect(finish).not.toHaveBeenCalled();
   });
 
-  it('ends when the Germans have no planes left', () => {
+  it('ends when the Americans have no units left', () => {
     G.board.planes[R_Amer][0].destroyed = true;
     checkGameEnd();
     expect(finish).toHaveBeenCalled();
@@ -80,18 +109,20 @@ describe('8.1: end of the game', () => {
     expect(finish).not.toHaveBeenCalled();
   });
 
-  it('ends when the British have neither planes nor guns', () => {
+  it('ends when the Japanese have neither planes nor guns', () => {
     G.board.planes[R_Jap][0].destroyed = true;
     checkGameEnd();
     expect(finish).toHaveBeenCalled();
   });
 
-  it('ends when both sides are gone at once, drawn at equal scores', () => {
-    G.min_vp = {[R_Amer]: 10, [R_Jap]: 10};
+  it('goes on while a ship is afloat', () => {
     G.board.planes[R_Amer][0].destroyed = true;
-    G.board.planes[R_Jap][0].destroyed = true;
+    G.ships = [{id: "0.s0", side: R_Amer, type: "NISZCZYCIEL", nazwa: "Niszczyciel", hexes: ["A30.B30", "A31.B30"]}];
     checkGameEnd();
-    expect(finish.mock.calls[0][0]).toBe("Draw");
+    expect(finish).not.toHaveBeenCalled();
+    G.ships[0].sunk = true;
+    checkGameEnd();
+    expect(finish).toHaveBeenCalled();
   });
 
   it('is checked after an action of a state, but not for its prompt', () => {
@@ -104,40 +135,23 @@ describe('8.1: end of the game', () => {
     expect(state.inactive).toBe("x");
   });
 
-  it('names the winner and the kind of the victory', () => {
-    G.vp = {[R_Amer]: 35, [R_Jap]: 0};
+  it('names the outcome by the table of the scenario, with what it counted', () => {
+    G.scenario = "1. Atak na Pearl Harbor";
+    G.targets = [];
+    G.board.planes[R_Amer] = [plane("0.0", "F4F", {destroyed: true}), plane("0.1", "F4F", {destroyed: true}), plane("0.2", "F4F", {destroyed: true, left_board: true})];
+    checkGameEnd();
+    expect(finish).toHaveBeenCalledWith(R_Jap, "Minimalne zwycięstwo Japończyków: straty: Amerykanie 2, Japończycy 0");
+  });
+
+  it('no clear winner is a draw', () => {
+    G.scenario = "1. Atak na Pearl Harbor";
+    G.targets = [];
+    G.board.planes[R_Amer][0].destroyed = true;
     G.board.planes[R_Jap][0].destroyed = true;
     checkGameEnd();
-    expect(finish).toHaveBeenCalledWith(R_Amer, "Wygrywają Amerykanie (pełne zwycięstwo): Amerykanie 35/35 PZ, Japończycy 0/23 PZ");
+    expect(finish).toHaveBeenCalledWith("Draw", "Brak wyraźnego zwycięzcy: straty: Amerykanie 1, Japończycy 1");
   });
 });
-
-describe('8.2: the winner', () => {
-  const min = {[R_Amer]: 35, [R_Jap]: 23};
-  const scores = (niem: number, bryt: number) => ({[R_Amer]: niem, [R_Jap]: bryt});
-
-  it('the one who reached the minimum', () => {
-    expect(winner(scores(35, 10), min)).toBe(R_Amer);
-    expect(winner(scores(10, 23), min)).toBe(R_Jap);
-  });
-
-  it('the one closer to the minimum (the example from the manual)', () => {
-    expect(winner(scores(27, 19), min)).toBe(R_Jap);
-  });
-
-  it('at equal points missing, the larger percentage (the example from the manual)', () => {
-    expect(winner(scores(31, 19), min)).toBe(R_Amer);
-  });
-
-  it('with both minimums reached, the larger surplus', () => {
-    expect(winner(scores(40, 24), min)).toBe(R_Amer);
-  });
-
-  it('a draw when the requirements and the scores are the same', () => {
-    expect(winner(scores(5, 5), {[R_Amer]: 10, [R_Jap]: 10})).toBeNull();
-  });
-});
-
 describe('4.3: leaving through the south edge', () => {
   const S = 3, NE = 1, N = 0;
   const canLeaveSouth = (it: PlaneInstance, all = {[R_Amer]: [it]}) => exitsFor(it, all).some(exit => exit.edge === "S");

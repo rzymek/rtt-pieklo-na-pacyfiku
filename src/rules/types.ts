@@ -86,7 +86,6 @@ export interface GameState extends BaseGameState {
   aa_fired?: string[]
   selected_gun?: string
   sun?: SunEdge
-  vp?: Record<number, number>
-  min_vp?: Record<number, number>
-  all_targets_vp?: number
+  // The name of the scenario, for its victory conditions (8.0.1) and special rules.
+  scenario?: string
 }
