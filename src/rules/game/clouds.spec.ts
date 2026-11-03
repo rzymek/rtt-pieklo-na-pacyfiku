@@ -11,11 +11,11 @@ const CLEAR = "A20.B20"
 let dice: number[];
 
 function spit(at: string, overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "1.0", plane: planes.Spit, at, direction: 0, ...overrides}
+  return {id: "1.0", plane: planes.A6M6, at, direction: 0, ...overrides}
 }
 
 function he111(at: string, overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.HE111, at, direction: 3, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at, direction: 3, ...overrides}
 }
 
 // Each die is rolled as random(6) + 1
@@ -52,7 +52,7 @@ describe('attack strength (5.0.2)', () => {
   });
 
   it('does not go below 0 (5.0.7)', () => {
-    expect(rollShot(spit(CLOUD, {plane: planes.HE111}), he111(CLOUD), 1).atk).toBe(0);
+    expect(rollShot(spit(CLOUD, {plane: planes.SBD}), he111(CLOUD), 1).atk).toBe(0);
   });
 
   it('changes the outcome of the roll', () => {

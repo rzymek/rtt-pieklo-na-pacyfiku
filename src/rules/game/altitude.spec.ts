@@ -12,11 +12,11 @@ vi.mock("../globals", async importOriginal => ({
 }));
 
 function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "1.0", plane: planes.Spit, at: "A20.B20", direction: 0, ...overrides}
+  return {id: "1.0", plane: planes.A6M6, at: "A20.B20", direction: 0, ...overrides}
 }
 
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.HE111, at: "A20.B22", direction: 3, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at: "A20.B22", direction: 3, ...overrides}
 }
 
 describe('canChangeAltitude', () => {

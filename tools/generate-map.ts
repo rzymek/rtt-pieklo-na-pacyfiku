@@ -124,7 +124,7 @@ ${uses.join('\n')}
  </g>
  <g id="markers"/>
  <g id="units">
-  <image id="plane-placeholder" x="0" y="0" width="20.204" height="20.204" preserveAspectRatio="none" xlink:href="file://${resolve(ROOT, 'public/planes/u_Spit.jpg')}"/>
+  <image id="plane-placeholder" x="0" y="0" width="20.204" height="20.204" preserveAspectRatio="none" xlink:href="file://${resolve(ROOT, 'public/planes/A6M.jpg')}"/>
  </g>
 </svg>
 `);

@@ -25,7 +25,7 @@ beforeEach(() => {
   Object.assign(G, {
     vp: {[R_Amer]: 0, [R_Jap]: 0},
     min_vp: {[R_Amer]: 35, [R_Jap]: 23},
-    board: {planes: {[R_Amer]: [plane("0.0", "HE111")], [R_Jap]: [plane("1.0", "Spit")]}},
+    board: {planes: {[R_Amer]: [plane("0.0", "SBD")], [R_Jap]: [plane("1.0", "A6M6")]}},
     targets: ["A01.B01", "A02.B02"],
     flown_over: {},
     bombed: [],
@@ -35,24 +35,22 @@ beforeEach(() => {
 
 describe('table 1', () => {
   it.each([
-    ["1.0", "Spit", {[R_Amer]: 2, [R_Jap]: -1}],
-    ["1.0", "HurL", {[R_Amer]: 2, [R_Jap]: -1}],
-    ["0.0", "HE111", {[R_Amer]: -2, [R_Jap]: 4}],
-    ["0.0", "JU88", {[R_Amer]: -2, [R_Jap]: 4}],
-    ["0.0", "ME109", {[R_Amer]: -1, [R_Jap]: 2}],
-    ["0.0", "ME110", {[R_Amer]: -1, [R_Jap]: 2}],
+    ["1.0", "A6M6", {[R_Amer]: 2, [R_Jap]: -1}],
+    ["0.0", "SBD", {[R_Amer]: -2, [R_Jap]: 4}],
+    ["0.0", "B25", {[R_Amer]: -2, [R_Jap]: 4}],
+    ["0.0", "F4F", {[R_Amer]: -1, [R_Jap]: 2}],
   ] as const)('losing plane %s %s', (id, type, expected) => {
     applyHit(plane(id, type, {damaged: true}));
     expect(G.vp).toEqual(expected);
   });
 
   it('a damaged plane scores nothing', () => {
-    applyHit(plane("1.0", "Spit"));
+    applyHit(plane("1.0", "A6M6"));
     expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
   });
 
   it('every series of bombs on a target counts, also on one bombed before (7.0.8)', () => {
-    const bomber = plane("0.0", "JU88");
+    const bomber = plane("0.0", "B25");
     G.flown_over = {"0.0": ["A01.B01"]};
     dropBomb(bomber, "A01.B01");
     G.flown_over = {"0.0": ["A01.B01"]};
@@ -62,12 +60,12 @@ describe('table 1', () => {
 
   it('bombs elsewhere than on a target score nothing', () => {
     G.flown_over = {"0.0": ["A05.B05"]};
-    dropBomb(plane("0.0", "JU88"), "A05.B05");
+    dropBomb(plane("0.0", "B25"), "A05.B05");
     expect(G.vp![R_Amer]).toBe(0);
   });
 
   it('the score can go below zero (8.0)', () => {
-    applyHit(plane("0.0", "HE111", {damaged: true}));
+    applyHit(plane("0.0", "SBD", {damaged: true}));
     expect(G.vp![R_Amer]).toBe(-2);
   });
 });
@@ -75,7 +73,7 @@ describe('table 1', () => {
 describe('9.2: bonus for all the targets', () => {
   const bomb = (hex: string) => {
     G.flown_over = {"0.0": [hex]};
-    dropBomb(plane("0.0", "JU88"), hex);
+    dropBomb(plane("0.0", "B25"), hex);
   };
 
   beforeEach(() => {
@@ -118,7 +116,7 @@ describe('8.1: end of the game', () => {
 
   it('goes on while reinforcements are to come', () => {
     G.board.planes[R_Jap][0].destroyed = true;
-    G.reinforcements = {[R_Amer]: [], [R_Jap]: [{stage: 9, plane: planes.Spit, at: "A01.B01", direction: 0}]};
+    G.reinforcements = {[R_Amer]: [], [R_Jap]: [{stage: 9, plane: planes.A6M6, at: "A01.B01", direction: 0}]};
     checkGameEnd();
     expect(finish).not.toHaveBeenCalled();
   });
@@ -187,28 +185,28 @@ describe('8.1: leaving through the south edge', () => {
   const canLeave = (it: PlaneInstance) => canLeaveSouth(it);
 
   it('straight ahead, from the edge', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: S}))).toBe(true);
+    expect(canLeave(plane("0.0", "F4F", {at: "A20.B11", direction: S}))).toBe(true);
   });
 
   it('straight ahead, within the range', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B16", direction: S}))).toBe(true);
+    expect(canLeave(plane("0.0", "F4F", {at: "A20.B16", direction: S}))).toBe(true);
   });
 
   it('not beyond the range', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B17", direction: S}))).toBe(false);
+    expect(canLeave(plane("0.0", "F4F", {at: "A20.B17", direction: S}))).toBe(false);
   });
 
   it('not when flying away from the edge', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: N}))).toBe(false);
+    expect(canLeave(plane("0.0", "F4F", {at: "A20.B11", direction: N}))).toBe(false);
   });
 
   it('after a turn', () => {
-    expect(canLeave(plane("0.0", "ME109", {at: "A20.B11", direction: NE}))).toBe(true);
+    expect(canLeave(plane("0.0", "F4F", {at: "A20.B11", direction: NE}))).toBe(true);
   });
 
   it('not through a plane at the same altitude', () => {
-    const bomber = plane("0.0", "HE111", {at: "A20.B13", direction: S});
+    const bomber = plane("0.0", "SBD", {at: "A20.B13", direction: S});
     expect(canLeave(bomber)).toBe(true);
-    expect(canLeaveSouth(bomber, {[R_Amer]: [bomber, plane("0.1", "ME109", {at: "A20.B12"})]})).toBe(false);
+    expect(canLeaveSouth(bomber, {[R_Amer]: [bomber, plane("0.1", "F4F", {at: "A20.B12"})]})).toBe(false);
   });
 });

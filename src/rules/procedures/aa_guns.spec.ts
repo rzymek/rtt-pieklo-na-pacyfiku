@@ -27,7 +27,7 @@ let dice: number[];
 const roll = (value: number) => dice = [value - 1];
 
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.HE111, at: GUN, direction: 3, altitude: ALT_LOW, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at: GUN, direction: 3, altitude: ALT_LOW, ...overrides}
 }
 
 function setup(niem: PlaneInstance[], guns = [GUN], active = R_Jap) {
@@ -63,20 +63,20 @@ beforeEach(() => {
 describe('setup (6)', () => {
   it('rolls the edge of the sun (5.0.1)', () => {
     roll(5);
-    on_setup("Wariant 1", undefined);
+    on_setup("1. Atak na Pearl Harbor", undefined);
     expect(G.sun).toBe("W");
   });
 
-  it('starts with the British placing the guns of the scenario', () => {
+  it('starts with the Japanese placing the guns of the scenario', () => {
     roll(1);
-    on_setup("Wariant 3", undefined);
+    on_setup("2. Kampania powietrzna na Filipinach", undefined);
     expect(G.active).toBe(R_Jap);
-    expect(call).toHaveBeenCalledWith("place_aa_guns", {count: 12});
+    expect(call).toHaveBeenCalledWith("place_aa_guns", {count: 8});
   });
 
   it('is skipped in a scenario without guns', () => {
     roll(1);
-    on_setup("Wariant 1", undefined);
+    on_setup("1. Atak na Pearl Harbor", undefined);
     expect(G.active).toBe(R_Jap);
     expect(call).toHaveBeenCalledWith("place_planes");
   });
@@ -156,7 +156,7 @@ describe('firing', () => {
   it('is not possible in the German combat phase (6.1)', () => {
     setup([he111()], [GUN], R_Amer);
     // A British plane on the board, or their movement phase would be skipped.
-    G.board.planes[R_Jap].push({id: "1.0", plane: planes.Spit, at: "A40.B40", direction: 0});
+    G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A40.B40", direction: 0});
     expect(actions(combat)).toEqual([]);
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("move_planes");

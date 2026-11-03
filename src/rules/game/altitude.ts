@@ -1,5 +1,4 @@
 import type {PlaneInstance} from "../types";
-import {bombsLeft} from "./bombs";
 
 // Higher value = flying lower.
 export const ALT_HIGH = 0
@@ -17,10 +16,8 @@ export function planeStats(plane: PlaneInstance) {
   return plane.damaged ? plane.plane.reduced : plane.plane
 }
 
-// 2.1: some bombers fly faster once all their bombs are gone.
 function maxSpeed(plane: PlaneInstance): number {
-  const stats = planeStats(plane)
-  return bombsLeft(plane) > 0 ? stats.predkosc_max : stats.predkosc_max_bez_bomb ?? stats.predkosc_max
+  return planeStats(plane).predkosc_max
 }
 
 // 4.2.2 / 4.2.4: descending adds 1 to the speed limit, climbing subtracts 1, for this turn only.

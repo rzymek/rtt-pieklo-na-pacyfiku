@@ -16,15 +16,15 @@ beforeEach(() => {
     stage: 3,
     board: {
       planes: {
-        [R_Amer]: [{id: "0.0", plane: planes.HE111, at: "A20.B20", direction: 0}],
-        [R_Jap]: [{id: "1.0", plane: planes.Spit, at: "A01.B09", direction: 0}],
+        [R_Amer]: [{id: "0.0", plane: planes.SBD, at: "A20.B20", direction: 0}],
+        [R_Jap]: [{id: "1.0", plane: planes.A6M6, at: "A01.B09", direction: 0}],
       }
     },
     reinforcements: {
       [R_Amer]: [],
       [R_Jap]: [
-        {stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1},
-        {stage: 5, plane: planes.Spit, at: "A06.B30", direction: 3},
+        {stage: 3, plane: planes.A6M6, at: "A01.B09", direction: 1},
+        {stage: 5, plane: planes.A6M6, at: "A06.B30", direction: 3},
       ],
     },
   });

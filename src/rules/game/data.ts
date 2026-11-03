@@ -1,185 +1,64 @@
+// 2.1.1: the stats printed on the reverse of the counter, used once the plane is badly damaged.
 export interface PlaneReducedStats {
 	predkosc_max: number
 	predkosc_min: number
-	sila_ataku: number
 	zwrotnosc: number
-	predkosc_max_bez_bomb?: number
+	sila_ataku: number
+	// 5.0.6: firing to the rear.
+	sila_ataku_tyl: number
 }
 
-export interface PlaneData {
+export interface PlaneData extends PlaneReducedStats {
 	nazwa: string
-	lider?: boolean
-	predkosc_max: number
-	predkosc_min: number
-	sila_ataku: number
-	zwrotnosc: number
+	// 7.0: bombs, or a torpedo, for this many attacks in the whole game.
 	udzwig_bomb: number | null
-	// Table 1: He-111 and Ju-88. The Me-110 carries bombs too, but counts as a fighter.
-	bombowiec?: boolean
+	// 2.2
+	wytrzymalosc: number
+	// 7.1.2
+	nurkowy?: boolean
+	// 7.3
+	torpedowy?: boolean
+	// Table 2: the counters in the box.
+	zetony: number
 	img: string
-	predkosc_max_bez_bomb?: number
 	reduced: PlaneReducedStats
 }
 
+type Stats = [max: number, min: number, zwrotnosc: number, atak: number, atak_tyl: number]
+
+function stats([predkosc_max, predkosc_min, zwrotnosc, sila_ataku, sila_ataku_tyl]: Stats): PlaneReducedStats {
+	return {predkosc_max, predkosc_min, zwrotnosc, sila_ataku, sila_ataku_tyl}
+}
+
+function plane(key: string, nazwa: string, front: Stats, back: Stats, udzwig_bomb: number | null, wytrzymalosc: number,
+               zetony: number, kind: { nurkowy?: boolean, torpedowy?: boolean } = {}): PlaneData {
+	return {nazwa, ...stats(front), udzwig_bomb, wytrzymalosc, ...kind, zetony, img: `planes/${key}`, reduced: stats(back)}
+}
+
+const DIVE = {nurkowy: true}
+const TORPEDO = {torpedowy: true}
+
+// Table 2, with the reverse sides read off the counters.
 export const data: { planes: Record<string, PlaneData> } = {
 	planes: {
-		Hur: {
-			nazwa: "Hawker Hurricane MK I",
-			predkosc_max: 5,
-			predkosc_min: 2,
-			sila_ataku: 4,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_Hur",
-			reduced: {
-				predkosc_max: 4,
-				predkosc_min: 2,
-				sila_ataku: 3,
-				zwrotnosc: 1
-			}
-		},
-		HurL: {
-			nazwa: "Hawker Hurricane MK I (Lider)",
-			lider: true,
-			predkosc_max: 5,
-			predkosc_min: 2,
-			sila_ataku: 5,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_HurL",
-			reduced: {
-				predkosc_max: 4,
-				predkosc_min: 2,
-				sila_ataku: 4,
-				zwrotnosc: 1
-			}
-		},
-		Spit: {
-			nazwa: "Supermarine Spitfire MK I",
-			predkosc_max: 6,
-			predkosc_min: 2,
-			sila_ataku: 4,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_Spit",
-			reduced: {
-				predkosc_max: 5,
-				predkosc_min: 2,
-				sila_ataku: 3,
-				zwrotnosc: 1
-			}
-		},
-		SpitL: {
-			nazwa: "Supermarine Spitfire MK I (Lider)",
-			lider: true,
-			predkosc_max: 6,
-			predkosc_min: 2,
-			sila_ataku: 5,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_SpitL",
-			reduced: {
-				predkosc_max: 5,
-				predkosc_min: 2,
-				sila_ataku: 4,
-				zwrotnosc: 1
-			}
-		},
-		ME109: {
-			nazwa: "Me 109 E",
-			predkosc_max: 6,
-			predkosc_min: 2,
-			sila_ataku: 3,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_ME109",
-			reduced: {
-				predkosc_max: 5,
-				predkosc_min: 2,
-				sila_ataku: 2,
-				zwrotnosc: 1
-			}
-		},
-		ME109L: {
-			nazwa: "Me 109 E (Lider)",
-			lider: true,
-			predkosc_max: 6,
-			predkosc_min: 2,
-			sila_ataku: 4,
-			zwrotnosc: 0,
-			udzwig_bomb: null,
-			img: "planes/u_ME109L",
-			reduced: {
-				predkosc_max: 5,
-				predkosc_min: 2,
-				sila_ataku: 3,
-				zwrotnosc: 1
-			}
-		},
-		ME110: {
-			nazwa: "Me 110 C",
-			predkosc_max: 5,
-			predkosc_min: 3,
-			sila_ataku: 4,
-			zwrotnosc: 1,
-			udzwig_bomb: 1,
-			img: "planes/u_ME110",
-			reduced: {
-				predkosc_max: 4,
-				predkosc_min: 3,
-				sila_ataku: 3,
-				zwrotnosc: 1
-			}
-		},
-		ME110L: {
-			nazwa: "Me 110 C (Lider)",
-			lider: true,
-			predkosc_max: 5,
-			predkosc_min: 3,
-			sila_ataku: 5,
-			zwrotnosc: 1,
-			udzwig_bomb: 1,
-			img: "planes/u_ME110L",
-			reduced: {
-				predkosc_max: 4,
-				predkosc_min: 3,
-				sila_ataku: 4,
-				zwrotnosc: 1
-			}
-		},
-		HE111: {
-			nazwa: "He 111 H-3",
-			predkosc_max: 4,
-			predkosc_min: 3,
-			sila_ataku: 2,
-			zwrotnosc: 2,
-			udzwig_bomb: 2,
-			bombowiec: true,
-			img: "planes/u_HE111",
-			reduced: {
-				predkosc_max: 3,
-				predkosc_min: 3,
-				sila_ataku: 1,
-				zwrotnosc: 2
-			}
-		},
-		JU88: {
-			nazwa: "Ju 88 A-4",
-			predkosc_max: 4,
-			predkosc_min: 3,
-			sila_ataku: 1,
-			zwrotnosc: 2,
-			udzwig_bomb: 3,
-			bombowiec: true,
-			img: "planes/u_JU88",
-			predkosc_max_bez_bomb: 5,
-			reduced: {
-				predkosc_max: 3,
-				predkosc_max_bez_bomb: 4,
-				predkosc_min: 3,
-				sila_ataku: 1,
-				zwrotnosc: 2
-			}
-		}
+		A6M: plane("A6M", "A6M Zero", [6, 1, 0, 4, 0], [5, 2, 1, 3, 0], null, 4, 12),
+		A6M6: plane("A6M6", "A6M6 Zero", [6, 2, 0, 4, 0], [5, 2, 1, 3, 0], null, 6, 8),
+		D3A: plane("D3A", "D3A Val", [4, 2, 1, 2, 1], [3, 3, 2, 1, 0], 1, 4, 12, DIVE),
+		D4Y: plane("D4Y", "D4Y1 Judy", [5, 2, 1, 2, 1], [4, 2, 2, 1, 0], 1, 4, 12, DIVE),
+		B5N: plane("B5N", "B5N Kate", [4, 3, 2, 0, 1], [3, 3, 2, 0, 0], 1, 4, 12, TORPEDO),
+		B6N: plane("B6N", "B6N Jill", [4, 3, 2, 1, 1], [3, 3, 2, 0, 0], 1, 5, 12, TORPEDO),
+		G4M: plane("G4M", "G4M Betty", [4, 3, 3, 2, 2], [4, 4, 3, 1, 1], 2, 3, 12, TORPEDO),
+		P1Y: plane("P1Y", "P1Y1 Frances", [5, 3, 2, 1, 1], [4, 3, 2, 0, 0], 2, 5, 12, TORPEDO),
+
+		F4F: plane("F4F", "F4F Wildcat", [6, 2, 1, 4, 0], [5, 2, 2, 3, 0], null, 6, 8),
+		P39: plane("P39", "P-39 Airacobra", [7, 2, 1, 3, 0], [6, 2, 2, 2, 0], null, 6, 4),
+		F6F: plane("F6F", "F6F Hellcat", [6, 2, 1, 4, 0], [5, 2, 2, 3, 0], null, 7, 12),
+		F4U: plane("F4U", "F4U Corsair", [7, 2, 0, 4, 0], [6, 2, 1, 3, 0], null, 7, 12),
+		SBD: plane("SBD", "SBD Dauntless", [4, 3, 2, 2, 1], [3, 3, 2, 1, 0], 1, 6, 12, DIVE),
+		SB2C: plane("SB2C", "SB2C Helldiver", [4, 3, 2, 2, 1], [4, 3, 2, 2, 1], 1, 6, 12, DIVE),
+		TBD: plane("TBD", "TBD Devastator", [3, 3, 2, 1, 1], [3, 3, 2, 1, 1], 1, 5, 12, TORPEDO),
+		TBF: plane("TBF", "TBF Avenger", [4, 3, 2, 1, 1], [3, 3, 2, 0, 0], 1, 6, 12, TORPEDO),
+		B25: plane("B25", "B-25 Mitchell", [5, 3, 3, 2, 3], [4, 3, 3, 1, 2], 3, 6, 4),
+		B17: plane("B17", "B-17 Flying Fortress", [6, 4, 3, 3, 3], [5, 4, 3, 2, 2], 6, 6, 8),
 	}
 }

@@ -2,7 +2,6 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
 import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
-import {maxSpeedAt} from "../game/altitude";
 import {flightsFor} from "../game/hex";
 import {combat} from "./combat";
 import {movePlanes} from "./move_planes";
@@ -18,11 +17,11 @@ const goto = vi.fn();
 const log = vi.fn();
 
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.HE111, at: "A20.B20", direction: 0, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at: "A20.B20", direction: 0, ...overrides}
 }
 
 function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "1.0", plane: planes.Spit, at: "A01.B01", direction: 0, ...overrides}
+  return {id: "1.0", plane: planes.A6M6, at: "A01.B01", direction: 0, ...overrides}
 }
 
 function setup(niem: PlaneInstance[], flownOver: Record<string, string[]> = {}, moved: string[] = []) {
@@ -101,7 +100,7 @@ describe('after the move', () => {
   });
 
   it('releases a plane without a bomb load', () => {
-    const plane = he111({plane: planes.ME109});
+    const plane = he111({plane: planes.F4F});
     setup([plane]);
     G.selected_plane = plane.id;
     movePlanes.move_hex("A20.B23");
@@ -164,7 +163,7 @@ describe('bombing', () => {
   });
 
   it('is limited by the bomb load (7.0.5)', () => {
-    const plane = he111();
+    const plane = he111({plane: planes.G4M});
     setup([plane], {"0.0": ["A20.B21", "A20.B22", "A20.B23"]}, ["0.0"]);
     G.selected_plane = "0.0";
     movePlanes.bomb("A20.B21");
@@ -211,22 +210,3 @@ describe('bombing', () => {
   });
 });
 
-describe('speed without bombs (2.1)', () => {
-  const ju88 = (overrides: Partial<PlaneInstance> = {}) => he111({plane: planes.JU88, ...overrides});
-
-  it('stays the same while any bombs are left', () => {
-    expect(maxSpeedAt(ju88({bombs_dropped: 2}), 0)).toBe(4);
-  });
-
-  it('rises after the last series', () => {
-    expect(maxSpeedAt(ju88({bombs_dropped: 3}), 0)).toBe(5);
-  });
-
-  it('uses the reduced value on a damaged plane (2.1.1)', () => {
-    expect(maxSpeedAt(ju88({bombs_dropped: 3, damaged: true}), 0)).toBe(4);
-  });
-
-  it('does not change for other planes', () => {
-    expect(maxSpeedAt(he111({bombs_dropped: 2}), 0)).toBe(4);
-  });
-});

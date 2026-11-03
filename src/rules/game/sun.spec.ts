@@ -14,7 +14,7 @@ vi.mock("../globals", async importOriginal => ({
 const N = 0, NE = 1, SE = 2, S = 3, SW = 4, NW = 5
 
 function spit(at: string, direction: number): PlaneInstance {
-  return {id: "1.0", plane: planes.Spit, at, direction}
+  return {id: "1.0", plane: planes.A6M6, at, direction}
 }
 
 const clearTarget = spit("A20.B20", N)

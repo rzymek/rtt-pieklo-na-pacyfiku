@@ -31,21 +31,21 @@ beforeEach(() => {
   vi.stubGlobal("push_undo", vi.fn());
   vi.stubGlobal("clear_undo", vi.fn());
   vi.stubGlobal("random", () => 0);
-  on_setup("Wariant 1", undefined);
+  on_setup("1. Atak na Pearl Harbor", undefined);
 });
 
 describe('9.3: setting up the planes', () => {
-  it('starts with empty skies, the British first', () => {
+  it('starts with empty skies, the Japanese first', () => {
     expect(G.active).toBe(R_Jap);
     expect(call).toHaveBeenCalledWith("place_planes");
     expect(G.board.planes[R_Jap]).toEqual([]);
-    expect(G.to_place![R_Jap]).toHaveLength(3);
+    expect(G.to_place![R_Jap]).toHaveLength(6);
   });
 
   it('offers the free starting hexes only', () => {
-    expect(actions().sort()).toEqual(hexesAround('A10.B08', 1).sort());
-    placePlanes.place_plane('A10.B08');
-    expect(actions()).not.toContain('A10.B08');
+    expect(actions().sort()).toEqual(hexesAround('A49.B39', 2).sort());
+    placePlanes.place_plane('A49.B39');
+    expect(actions()).not.toContain('A49.B39');
   });
 
   it('rejects hexes outside of the radius', () => {
@@ -53,17 +53,16 @@ describe('9.3: setting up the planes', () => {
     expect(G.board.planes[R_Jap]).toEqual([]);
   });
 
-  it('lets the player turn the placed plane and pick the type', () => {
-    placePlanes.place_plane('A10.B08');
+  it('lets the player turn the placed plane', () => {
+    placePlanes.place_plane('A49.B39');
     const placed = G.board.planes[R_Jap][0];
-    expect(placed.plane).toBe(planes.SpitL);
+    expect(placed.plane).toBe(planes.A6M);
     const direction = placed.direction;
     placePlanes.turn_right();
     expect(placed.direction).toBe((direction + 1) % 6);
-    expect(G.to_place![R_Jap][0].plane).toBe(planes.Spit);
   });
 
-  it('hands over to the Germans, then starts the game', () => {
+  it('hands over to the Americans, then starts the game', () => {
     placePlanes.done();
     expect(G.active).toBe(R_Jap);
 
@@ -81,14 +80,15 @@ describe('9.3: setting up the planes', () => {
     placePlanes.next_type();
     placePlanes.done();
     expect(goto).toHaveBeenCalledWith("move_planes");
-    expect(G.board.planes[R_Amer]).toHaveLength(6);
-    expect(new Set(G.board.planes[R_Amer].map(it => it.id)).size).toBe(6);
+    expect(G.board.planes[R_Amer]).toHaveLength(4);
+    expect(new Set(G.board.planes[R_Amer].map(it => it.id)).size).toBe(4);
   });
 
   it('next_type moves on to another type', () => {
+    on_setup("2. Kampania powietrzna na Filipinach", undefined);
     G.active = R_Amer;
-    expect(G.to_place![R_Amer][0].plane).toBe(planes.ME110);
+    expect(G.to_place![R_Amer][0].plane.nazwa).toBe(planes.B17.nazwa);
     placePlanes.next_type();
-    expect(G.to_place![R_Amer][0].plane).toBe(planes.HE111);
+    expect(G.to_place![R_Amer][0].plane.nazwa).toBe(planes.B25.nazwa);
   });
 });

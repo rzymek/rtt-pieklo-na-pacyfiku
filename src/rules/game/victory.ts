@@ -21,7 +21,7 @@ function addVp(side: number, points: number, reason: string) {
 export function scorePlaneLost(plane: PlaneInstance, {shotDown = true} = {}) {
   const name = plane.plane.nazwa
   const side = parseInt(plane.id)
-  const bomber = side === R_Amer && !!plane.plane.bombowiec
+  const bomber = !!plane.plane.udzwig_bomb
   addVp(side, bomber ? VP_BOMBER_LOST : VP_FIGHTER_LOST, `stracony ${name}`)
   if (shotDown) addVp(otherSide(side), bomber ? VP_BOMBER_SHOT_DOWN : VP_FIGHTER_SHOT_DOWN, `zestrzelony ${name}`)
 }

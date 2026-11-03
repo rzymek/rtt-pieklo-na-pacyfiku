@@ -17,11 +17,11 @@ const goto = vi.fn((_name: string, env?: object) => Object.assign(L, env));
 let dice: number[];
 
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.HE111, at: "A20.B21", direction: 0, ...overrides}
+  return {id: "0.0", plane: planes.SBD, at: "A20.B21", direction: 0, ...overrides}
 }
 
 function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "1.0", plane: planes.Spit, at: "A20.B20", direction: 0, ...overrides}
+  return {id: "1.0", plane: planes.A6M6, at: "A20.B20", direction: 0, ...overrides}
 }
 
 function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Jap) {

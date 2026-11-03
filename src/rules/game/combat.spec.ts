@@ -18,8 +18,8 @@ const TABLE_2: [number, (number | null)[]][] = [
 function shoot(sila_ataku: number, distance: number, sum: number) {
   const dice = [Math.ceil(sum / 2) - 1, Math.floor(sum / 2) - 1];
   vi.stubGlobal("random", () => dice.shift());
-  const attacker = {id: "1.0", plane: {...planes.Spit, sila_ataku} as PlaneData, at: "A20.B20", direction: 0};
-  const target = {id: "0.0", plane: planes.HE111, at: "A20.B21", direction: 0};
+  const attacker = {id: "1.0", plane: {...planes.A6M6, sila_ataku} as PlaneData, at: "A20.B20", direction: 0};
+  const target = {id: "0.0", plane: planes.SBD, at: "A20.B21", direction: 0};
   return rollShot(attacker, target, distance).hit;
 }
 
@@ -47,7 +47,7 @@ it.each(cases)('attack strength %i, distance %i: the chance agrees with the roll
 
 describe("describeShot", () => {
   const plane = (overrides: Partial<PlaneInstance> = {}): PlaneInstance =>
-    ({id: "1.0", plane: {...planes.Spit, sila_ataku: 4} as PlaneData, at: "A20.B20", direction: 0, ...overrides});
+    ({id: "1.0", plane: {...planes.A6M6, sila_ataku: 4} as PlaneData, at: "A20.B20", direction: 0, ...overrides});
 
   it('shows the strength, the distance, the rolls and the chances', () => {
     expect(describeShot(plane(), plane(), 2))

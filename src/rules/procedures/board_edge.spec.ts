@@ -64,7 +64,7 @@ function leave(from: PlaneInstance, hex: string) {
 
 describe('board limits', () => {
   it('offers no flights off the board', () => {
-    const it = plane("0.0", "ME109", {at: EAST_EDGE, direction: EAST});
+    const it = plane("0.0", "F4F", {at: EAST_EDGE, direction: EAST});
     const flights = flightsFor(it, {[R_Amer]: [it]});
     expect(Object.keys(flights).every(hex => parseInt(hex.slice(1)) <= 56)).toBe(true);
     expect(exitsFor(it, {[R_Amer]: [it]})).toContainEqual({hex: EAST_EDGE, south: false});
@@ -78,7 +78,7 @@ describe('board limits', () => {
 
 describe('4.3: leaving the board', () => {
   it('British: no die, comes back in 5 stages', () => {
-    const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
+    const it = plane("1.0", "A6M6", {at: EAST_EDGE, direction: EAST});
     setup([], [it], R_Jap);
     leave(it, EAST_EDGE);
     expect(G.board.planes[R_Jap]).toEqual([]);
@@ -93,7 +93,7 @@ describe('4.3: leaving the board', () => {
       [3, false, "intact"],
       [6, true, "damaged"],
     ])('roll %i, damaged before: %s → %s', (value, damaged, outcome) => {
-      const it = plane("0.0", "ME109", {at: EAST_EDGE, direction: EAST, damaged});
+      const it = plane("0.0", "F4F", {at: EAST_EDGE, direction: EAST, damaged});
       setup([it], []);
       roll(value);
       leave(it, EAST_EDGE);
@@ -112,8 +112,8 @@ describe('4.3: leaving the board', () => {
 
   describe('German, through the south edge (8.1)', () => {
     const south = () => {
-      const it = plane("0.0", "HE111", {at: "A20.B11", direction: S});
-      setup([it, plane("0.1", "HE111", {at: "A30.B30"})], [plane("1.0", "Spit", {at: "A10.B20"})]);
+      const it = plane("0.0", "SBD", {at: "A20.B11", direction: S});
+      setup([it, plane("0.1", "SBD", {at: "A30.B30"})], [plane("1.0", "A6M6", {at: "A10.B20"})]);
       dice = [];
       leave(it, "A20.B11");
       return it;
@@ -125,8 +125,8 @@ describe('4.3: leaving the board', () => {
     });
 
     it('may skip the exit hex when not coming back', () => {
-      const it = plane("0.0", "HE111", {at: "A20.B11", direction: S});
-      setup([it, plane("0.1", "HE111", {at: "A30.B30"})], [plane("1.0", "Spit", {at: "A10.B20"})]);
+      const it = plane("0.0", "SBD", {at: "A20.B11", direction: S});
+      setup([it, plane("0.1", "SBD", {at: "A30.B30"})], [plane("1.0", "A6M6", {at: "A10.B20"})]);
       G.selected_plane = it.id;
       movePlanes.leave_board();
       expect(buttons(movePlanes)).toEqual(["leave_forever"]);
@@ -152,7 +152,7 @@ describe('4.3: leaving the board', () => {
   });
 
   it('no leave_board button while choosing the exit hex', () => {
-    const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
+    const it = plane("1.0", "A6M6", {at: EAST_EDGE, direction: EAST});
     setup([], [it], R_Jap);
     G.selected_plane = it.id;
     movePlanes.leave_board();
@@ -160,8 +160,8 @@ describe('4.3: leaving the board', () => {
   });
 
   it('a plane waiting to return is out of reach, yet still counts as a unit', () => {
-    const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
-    setup([plane("0.0", "HE111", {at: "A55.B40", direction: EAST})], [it], R_Jap);
+    const it = plane("1.0", "A6M6", {at: EAST_EDGE, direction: EAST});
+    setup([plane("0.0", "SBD", {at: "A55.B40", direction: EAST})], [it], R_Jap);
     leave(it, EAST_EDGE);
     expect(fireTarget(G.board.planes[R_Amer][0], R_Amer)).toBeNull();
     G.board.planes[R_Jap] = [];
@@ -169,8 +169,8 @@ describe('4.3: leaving the board', () => {
   });
 
   it('comes back after 5 stages, on a free edge hex within 5 hexes, then moves as usual (4.3.1)', () => {
-    const it = plane("0.0", "HE111", {at: EAST_EDGE});
-    setup([plane("0.1", "HE111", {at: "A56.B41"})], [plane("1.0", "Spit", {at: "A10.B20"})], R_Jap);
+    const it = plane("0.0", "SBD", {at: EAST_EDGE});
+    setup([plane("0.1", "SBD", {at: "A56.B41"})], [plane("1.0", "A6M6", {at: "A10.B20"})], R_Jap);
     G.off_board = [{plane: it, return_stage: 4, from: EAST_EDGE}];
     endCombat();
     expect(G.stage).toBe(4);
@@ -197,8 +197,8 @@ describe('4.3: leaving the board', () => {
   });
 
   it('shows the players the free hexes a plane may come back to', () => {
-    const it = plane("0.0", "HE111", {at: EAST_EDGE});
-    setup([plane("0.1", "HE111", {at: "A56.B41"})], []);
+    const it = plane("0.0", "SBD", {at: EAST_EDGE});
+    setup([plane("0.1", "SBD", {at: "A56.B41"})], []);
     G.off_board = [{plane: it, return_stage: 8, from: EAST_EDGE}];
     on_view();
     const [waiting] = V.off_board!;
@@ -209,10 +209,10 @@ describe('4.3: leaving the board', () => {
   });
 
   it('does not come back too early, and reinforcements get an unused id', () => {
-    const it = plane("1.0", "Spit");
-    setup([plane("0.0", "HE111")], [], R_Amer);
+    const it = plane("1.0", "A6M6");
+    setup([plane("0.0", "SBD")], [], R_Amer);
     G.off_board = [{plane: it, return_stage: 8, from: EAST_EDGE}];
-    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
+    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.A6M6, at: "A01.B09", direction: 1}];
     endCombat();
     expect(goto).toHaveBeenCalledWith("move_planes");
     expect(G.board.planes[R_Jap][0].id).toBe("1.1");
@@ -221,10 +221,10 @@ describe('4.3: leaving the board', () => {
 
 describe('no own plane on the board', () => {
   const offBoard = (id: string, return_stage: number) =>
-    ({plane: plane(id, id.startsWith("0") ? "HE111" : "Spit"), return_stage, from: EAST_EDGE});
+    ({plane: plane(id, id.startsWith("0") ? "SBD" : "A6M6"), return_stage, from: EAST_EDGE});
 
   it('skips the movement phase of that side', () => {
-    setup([plane("0.0", "HE111")], []);
+    setup([plane("0.0", "SBD")], []);
     G.off_board = [offBoard("1.0", 8)];
     endCombat();
     expect(G.active).toBe(R_Amer);
@@ -234,30 +234,30 @@ describe('no own plane on the board', () => {
   });
 
   it('destroyed planes do not count', () => {
-    setup([plane("0.0", "HE111")], [plane("1.0", "Spit", {destroyed: true})]);
+    setup([plane("0.0", "SBD")], [plane("1.0", "A6M6", {destroyed: true})]);
     G.off_board = [offBoard("1.1", 8)];
     endCombat();
     expect(G.active).toBe(R_Amer);
   });
 
   it('keeps the movement phase when a plane returns or a reinforcement enters', () => {
-    setup([plane("0.0", "HE111")], []);
+    setup([plane("0.0", "SBD")], []);
     G.off_board = [offBoard("1.0", 3)];
     endCombat();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("return_planes");
 
     goto.mockClear();
-    setup([plane("0.0", "HE111")], []);
+    setup([plane("0.0", "SBD")], []);
     G.off_board = [offBoard("1.0", 8)];
-    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
+    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.A6M6, at: "A01.B09", direction: 1}];
     endCombat();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("move_planes");
   });
 
   it('keeps the combat phase for the AA guns', () => {
-    const he = plane("0.0", "HE111", {at: "A20.B20", altitude: 2});
+    const he = plane("0.0", "SBD", {at: "A20.B20", altitude: 2});
     setup([he], []);
     G.off_board = [offBoard("1.0", 8)];
     G.aa_guns = ["A20.B20"];
@@ -281,17 +281,17 @@ describe('no own plane on the board', () => {
 describe('4.2.6: no free way to fly', () => {
   // A He-111 at max speed 4, min 3, turns after 2. Boxed in on all altitudes it can reach.
   function boxed(extra: Partial<PlaneInstance> = {}) {
-    const he = plane("0.0", "HE111", {at: "A20.B20", direction: N, damaged: true, ...extra});
+    const he = plane("0.0", "SBD", {at: "A20.B20", direction: N, damaged: true, ...extra});
     // Damaged: 3-3, cannot climb and flying high cannot be reached from below.
-    const blocker = (id: string, at: string, altitude = 0) => plane(id, "Spit", {at, altitude});
+    const blocker = (id: string, at: string, altitude = 0) => plane(id, "A6M6", {at, altitude});
     const blockers = ["A20.B21"].flatMap((at, i) => [blocker(`1.${i}0`, at, 0), blocker(`1.${i}1`, at, 1)]);
     setup([he], blockers);
     return he;
   }
 
   it('is not forced with a free altitude', () => {
-    const he = plane("0.0", "HE111", {at: "A20.B20"});
-    setup([he], [plane("1.0", "Spit", {at: "A20.B21"})]);
+    const he = plane("0.0", "SBD", {at: "A20.B20"});
+    setup([he], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     expect(isForced(he)).toBe(false);
   });
 
@@ -299,7 +299,7 @@ describe('4.2.6: no free way to fly', () => {
     const he = boxed();
     expect(isForced(he)).toBe(true);
     G.selected_plane = he.id;
-    const on = plane("1.5", "Spit", {at: "A20.B23"});
+    const on = plane("1.5", "A6M6", {at: "A20.B23"});
     G.board.planes[R_Jap].push(on);
     roll(3);
     movePlanes.move_hex("A20.B23");
@@ -311,7 +311,7 @@ describe('4.2.6: no free way to fly', () => {
   it('a 6 destroys both, costing only the owners their planes', () => {
     const he = boxed();
     G.selected_plane = he.id;
-    const on = plane("1.5", "Spit", {at: "A20.B23"});
+    const on = plane("1.5", "A6M6", {at: "A20.B23"});
     G.board.planes[R_Jap].push(on);
     roll(6);
     movePlanes.move_hex("A20.B23");
@@ -323,8 +323,8 @@ describe('4.2.6: no free way to fly', () => {
 
 describe('5.3.4: unjamming', () => {
   it('the guns work from the next stage on', () => {
-    const it = plane("0.0", "ME109", {jammed: true});
-    setup([it], [plane("1.0", "Spit", {at: "A20.B21"})]);
+    const it = plane("0.0", "F4F", {jammed: true});
+    setup([it], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     G.selected_plane = it.id;
     dice = [5];
     combat.unjam();
@@ -340,7 +340,7 @@ describe('ending the combat phase', () => {
   beforeEach(() => vi.stubGlobal("push_undo", vi.fn()));
 
   it('asks for confirmation while a plane may still fire', () => {
-    setup([plane("0.0", "ME109")], [plane("1.0", "Spit", {at: "A20.B21"})]);
+    setup([plane("0.0", "F4F")], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     combat.done();
     expect(G.confirm_done).toBe(true);
     expect(G.stage).toBe(3);
@@ -354,7 +354,7 @@ describe('ending the combat phase', () => {
   });
 
   it('ends at once once every plane has fired', () => {
-    setup([plane("0.0", "ME109")], [plane("1.0", "Spit", {at: "A20.B21"})]);
+    setup([plane("0.0", "F4F")], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     G.shot = ["0.0"];
     combat.done();
     expect(G.confirm_done).toBeUndefined();
@@ -362,19 +362,13 @@ describe('ending the combat phase', () => {
   });
 });
 
-it('Me 109 has the attack strength of its counters (5.0.6)', () => {
-  expect(planes.ME109.sila_ataku).toBe(3);
-  expect(planes.ME109.reduced.sila_ataku).toBe(2);
-  expect(planes.ME109L.sila_ataku).toBe(4);
-});
-
 describe('undo after the movement phase', () => {
   it('ending the moves can be taken back until a die is rolled in combat', () => {
     const pushUndo = vi.fn(), clearUndo = vi.fn();
     vi.stubGlobal("push_undo", pushUndo);
     vi.stubGlobal("clear_undo", clearUndo);
-    const me = plane("0.0", "ME109");
-    setup([me], [plane("1.0", "Spit", {at: "A20.B21"})]);
+    const me = plane("0.0", "F4F");
+    setup([me], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     G.moved = [me.id];
     movePlanes.done();
     expect(pushUndo).toHaveBeenCalledTimes(1);
