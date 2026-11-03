@@ -2,6 +2,7 @@ import type {BaseGameState} from "@rzymek/rally-the-troops-module/rules"
 import type {PlaneData} from "./game/data.js"
 import type {Reinforcement} from "./game/scenarios.js"
 import type {SunEdge} from "./game/sun.js"
+import type {LandGun} from "./game/aa.js"
 
 export interface PlaneInstanceDef {
   plane: PlaneData
@@ -20,6 +21,8 @@ export interface PlaneInstanceDef {
   // 5.3.4: the guns work again from the next stage on.
   unjammed_stage?: number
   bombs_dropped?: number
+  // 6.2: until the end of the stage.
+  under_fire?: boolean
 }
 
 export interface PlaneInstance extends PlaneInstanceDef {
@@ -65,7 +68,7 @@ export interface GameState extends BaseGameState {
   confirm_done?: boolean
   flown_over?: Record<string, string[]>
   bombed?: string[]
-  aa_guns?: string[]
+  aa_guns?: LandGun[]
   aa_fired?: string[]
   selected_gun?: string
   sun?: SunEdge

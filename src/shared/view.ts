@@ -13,6 +13,7 @@ export interface ViewPlaneInstance {
   left_board?: boolean
   jammed?: boolean
   bombs_dropped?: number
+  under_fire?: boolean
 }
 
 export interface ViewActions {
@@ -58,7 +59,7 @@ export interface View extends BaseViewState<ViewActions> {
   shot?: string[]
   bombed?: string[]
   targets?: string[]
-  aa_guns?: string[]
+  aa_guns?: { id: string, side: number, heavy: boolean, hexes: string[] }[]
   aa_fired?: string[]
   selected_gun?: string
   sun?: SunEdge

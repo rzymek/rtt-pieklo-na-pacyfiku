@@ -226,7 +226,7 @@ describe('no own plane on the board', () => {
     const he = plane("0.0", "SBD", {at: "A20.B20", altitude: 1});
     setup([he], []);
     G.off_board = [offBoard("1.0", 8)];
-    G.aa_guns = ["A20.B20"];
+    G.aa_guns = [{hex: "A20.B20", side: R_Jap, heavy: true}];
     movePlanes.done();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledTimes(1);

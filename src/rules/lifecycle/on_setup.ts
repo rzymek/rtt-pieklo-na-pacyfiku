@@ -40,8 +40,10 @@ export function on_setup(scenario: string, _options: unknown) {
   G.aa_guns = []
   G.aa_fired = []
   G.active = R_Jap
-  if (japonczycy.aa_guns) {
-    call("place_aa_guns", {count: japonczycy.aa_guns})
+  const gunSide = [R_Jap, R_Amer].find(side => (side === R_Jap ? japonczycy : amerykanie).aa_guns)
+  if (gunSide !== undefined) {
+    G.active = gunSide
+    call("place_aa_guns", (gunSide === R_Jap ? japonczycy : amerykanie).aa_guns)
   } else {
     call("place_planes")
   }

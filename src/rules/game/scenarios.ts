@@ -25,13 +25,15 @@ export interface Reinforcement {
 
 export interface Side {
   deployments: Deployment[]
+  // 6.1.1: land guns, set up anywhere on the island.
+  aa_guns?: { count: number, heavy: boolean }
   reinforcements?: Reinforcement[]
   // Lew Morski's victory points, until the scenario victory conditions (8) replace them.
   min_vp: number
 }
 
 export interface Scenario {
-  japonczycy: Side & { aa_guns?: number }
+  japonczycy: Side
   amerykanie: Side
   targets: string[]
   all_targets_vp?: number
@@ -65,7 +67,7 @@ export const SCENARIOS: Record<string, Scenario> = {
         {center: 'A03.B24', radius: 2, direction: NE, planes: times(2, A6M)},
         {center: 'A17.B09', radius: 2, direction: NE, planes: times(2, A6M)},
       ],
-      aa_guns: 8,
+      aa_guns: {count: 8, heavy: true},
       min_vp: 1,
     },
     amerykanie: {

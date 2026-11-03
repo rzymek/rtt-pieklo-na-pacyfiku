@@ -44,6 +44,8 @@ export function endCombat() {
   changeSide()
   if (G.active === R_Amer) {
     G.stage++
+    // 6.2: the "under fire" counters come off at the end of the stage.
+    for (const plane of Object.values(G.board.planes).flat()) delete plane.under_fire
     // 2.0
     log(`Etap ${G.stage}`)
   }

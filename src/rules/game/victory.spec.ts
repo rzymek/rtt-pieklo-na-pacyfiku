@@ -107,9 +107,9 @@ describe('8.1: end of the game', () => {
     expect(finish).toHaveBeenCalled();
   });
 
-  it('goes on while the British have guns left', () => {
+  it('goes on while the Japanese have guns left', () => {
     G.board.planes[R_Jap][0].destroyed = true;
-    G.aa_guns = ["A05.B05"];
+    G.aa_guns = [{hex: "A05.B05", side: R_Jap, heavy: true}];
     checkGameEnd();
     expect(finish).not.toHaveBeenCalled();
   });

@@ -37,6 +37,13 @@ function bombsLeftDigit(plane: ViewPlaneInstance): string {
       text-anchor="middle" fill="${bombs > 0 ? '#147a14' : '#8a8a8a'}">${bombs}</text>`
 }
 
+// 6.2: the "under fire" counter, as a target in the corner of the counter.
+function underFire(plane: ViewPlaneInstance): string {
+  if (!plane.under_fire) return ''
+  return `<g transform="translate(9 22)" fill="none" stroke="#e00000" stroke-width="1.6">
+      <circle r="7" fill="white" fill-opacity=".8"/><circle r="4.5"/><circle r="2"/><path d="M-9 0h18M0 -9v18" stroke-width=".8"/></g>`
+}
+
 // 2.2: the endurance left, where the counter number was printed.
 function enduranceLeft(plane: ViewPlaneInstance): string {
   const left = plane.plane.wytrzymalosc - (plane.damage ?? 0)
@@ -65,7 +72,7 @@ export function createPlaneCounter(plane: ViewPlaneInstance, center = getHexCent
   const overlays = document.createElementNS(svgNS, 'g')
   overlays.setAttribute('transform', `${rotation} translate(${center.x - imgW / 2}, ${center.y - imgH / 2}) scale(${imgW / ART_SIZE})`)
   overlays.style.pointerEvents = 'none'
-  overlays.innerHTML = altitudeTab(plane.altitude ?? 5) + bombsLeftDigit(plane) + enduranceLeft(plane)
+  overlays.innerHTML = altitudeTab(plane.altitude ?? 5) + bombsLeftDigit(plane) + enduranceLeft(plane) + underFire(plane)
   group.appendChild(overlays)
 
   if (plane.jammed) {

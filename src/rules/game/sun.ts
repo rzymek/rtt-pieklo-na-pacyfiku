@@ -1,7 +1,7 @@
 import type {PlaneInstance} from "../types";
 import {G} from "../globals";
 import {cloudPenalty} from "./clouds";
-import {DIR_OFFSETS, hexId, hexStep, parseHex} from "@rzymek/rally-the-troops-module/rules";
+import {DIR_OFFSETS, hexDistance, hexId, hexStep, parseHex} from "@rzymek/rally-the-troops-module/rules";
 import {isOnBoard} from "./hex";
 
 export type SunEdge = "E" | "S" | "W"
@@ -40,7 +40,6 @@ function facesSun(hex: string, direction: number, edge: SunEdge): boolean {
   return sunHexes(edge).includes(last)
 }
 
-// 5.0.1, 5.0.3
 // The direction of the straight line from one hex to another, if they are on one.
 function lineDirection(from: string, to: string): number {
   const [a1, b1] = parseHex(from) as [number, number]
@@ -50,7 +49,7 @@ function lineDirection(from: string, to: string): number {
   return DIR_OFFSETS.findIndex(([x, y]) => x * steps === da && y * steps === db)
 }
 
-// 5.0.6: a rear shot follows its own fire line, not the plane's heading.
+// 5.0.1, 5.0.3; 5.0.6: a rear shot follows its own fire line, not the plane's heading.
 export function sunPenalty(attacker: PlaneInstance, target: PlaneInstance, rear = false): number {
   const edge = G?.sun
   if (!edge || cloudPenalty(target) > 0) return 0
@@ -58,12 +57,22 @@ export function sunPenalty(attacker: PlaneInstance, target: PlaneInstance, rear 
   return direction >= 0 && facesSun(attacker.at, direction, edge) ? 1 : 0
 }
 
-// 6.2.5: seen from the gun, the plane is against the sun. A plane right above the gun has no direction.
+// The hex direction closest to the way from one hex to another; -1 for the same hex.
+function nearestDirection(from: string, to: string): number {
+  const distance = hexDistance(from, to)
+  if (distance === 0) return -1
+  const [a, b] = parseHex(from) as [number, number]
+  const missBy = (direction: number) => {
+    const [da, db] = DIR_OFFSETS[direction]
+    return hexDistance(hexId(a + da * distance, b + db * distance), to)
+  }
+  return [0, 1, 2, 3, 4, 5].reduce((best, it) => missBy(it) < missBy(best) ? it : best)
+}
+
+// 6.3.5: seen from the gun, the plane is against the sun. A plane right above the gun has no direction.
 export function isAgainstSun(gun: string, plane: PlaneInstance): boolean {
   const edge = G?.sun
   if (!edge) return false
-  const [a1, b1] = parseHex(gun) as [number, number]
-  const [a2, b2] = parseHex(plane.at) as [number, number]
-  const direction = DIR_OFFSETS.findIndex(([da, db]) => a1 + da === a2 && b1 + db === b2)
+  const direction = nearestDirection(gun, plane.at)
   return direction >= 0 && facesSun(plane.at, direction, edge)
 }

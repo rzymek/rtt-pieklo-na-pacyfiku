@@ -1,81 +1,95 @@
 import type {PlaneInstance} from "../types";
 import {G, L, R_Jap, ROLES} from "../globals";
-import {aaHitFrom, canPlaceGun, GUN_DESTROYED_FROM} from "../game/aa";
+import {AaGun, aaShot, canFireAt, canPlaceGun, describeAaShot, GUN_DESTROYED_FROM} from "../game/aa";
 import {ALTITUDE_NAMES, altitudeOf} from "../game/altitude";
 import {applyHit} from "../game/combat";
 import {boardHexes} from "../game/scenarios";
-import {hexDistance, isEmpty} from "@rzymek/rally-the-troops-module/rules";
+import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {otherSide} from "../lifecycle/changeSide";
 import {endAntiAircraft} from "./phases";
 
-function gunsLeftToPlace(): number {
-  return (L.count as number) - (G.aa_guns ?? []).length
+function landGuns() {
+  return G.aa_guns ?? []
 }
 
-// 6: the British player sets up the guns before the game starts.
+function gunsLeftToPlace(): number {
+  return (L.count as number) - landGuns().filter(it => it.side === G.active).length
+}
+
+const caliber = (heavy: boolean) => heavy ? "ciężkie" : "lekkie"
+
+// 6.1.1: the scenario's land guns are set up by their side before the game starts.
 export const placeAaGuns = {
   inactive: "rozstawianie działek p-lot",
 
   prompt() {
     const left = gunsLeftToPlace()
-    prompt(`Rozstaw działka p-lot – pozostało: ${left}`)
+    prompt(`Rozstaw ${caliber(L.heavy as boolean)} działka p-lot na wyspie – pozostało: ${left}`)
     if (left > 0)
-      boardHexes().filter(hex => canPlaceGun(hex, G.aa_guns ?? [])).forEach(hex => action("place_gun", hex))
+      boardHexes().filter(hex => canPlaceGun(hex, landGuns())).forEach(hex => action("place_gun", hex))
     button("done", left === 0)
   },
 
   place_gun(hex: string) {
-    if (gunsLeftToPlace() <= 0 || !canPlaceGun(hex, G.aa_guns ?? [])) return
+    if (gunsLeftToPlace() <= 0 || !canPlaceGun(hex, landGuns())) return
     push_undo()
     G.aa_guns ??= []
-    set_add(G.aa_guns, hex)
+    G.aa_guns.push({hex, side: G.active, heavy: L.heavy as boolean})
   },
 
   done() {
     if (gunsLeftToPlace() > 0) return
     clear_undo()
-    log(`${ROLES[R_Jap]}: rozstawiono działka p-lot (${G.aa_guns!.length})`)
+    log(`${ROLES[G.active]}: rozstawiono działka p-lot (${L.count})`)
+    // 9.3: the Japanese set up their planes first.
+    G.active = R_Jap
     goto("place_planes")
   },
 }
 
-// 6.1.1: the land guns of the scenario, so far on the Japanese side only.
-function gunsOf(side: number): string[] {
-  return side === R_Jap ? G.aa_guns ?? [] : []
+// 6.1.1, 6.1.3: the land guns of the side.
+export function gunsOf(side: number): AaGun[] {
+  return landGuns().filter(it => it.side === side).map(({hex, heavy}) => ({id: hex, side, heavy, hexes: [hex]}))
+}
+
+function gunById(id: string | undefined): AaGun | undefined {
+  return gunsOf(G.active).find(it => it.id === id)
 }
 
 // 6.2: the guns of the active side fire at the planes of the other one.
-export function aaTargets(gun: string): PlaneInstance[] {
-  return G.board.planes[otherSide(G.active)].filter(plane => aaHitFrom(gun, plane) !== null)
+export function aaTargets(gun: AaGun): PlaneInstance[] {
+  return G.board.planes[otherSide(G.active)].filter(plane => canFireAt(gun, plane))
 }
 
 // 6.3.1: one shot per gun in a stage.
-export function gunsReady(): string[] {
-  return gunsOf(G.active).filter(gun => !set_has(G.aa_fired ?? [], gun) && aaTargets(gun).length > 0)
+export function gunsReady(): AaGun[] {
+  return gunsOf(G.active).filter(gun => !set_has(G.aa_fired ?? [], gun.id) && aaTargets(gun).length > 0)
 }
 
-export function selectGun(gun: string) {
+export function selectGun(id: string) {
   delete G.selected_plane
-  if (G.selected_gun === gun) {
+  if (G.selected_gun === id) {
     delete G.selected_gun
-  } else if (gunsReady().includes(gun)) {
-    G.selected_gun = gun
+  } else if (gunsReady().some(it => it.id === id)) {
+    G.selected_gun = id
   }
 }
 
 export function fireGun(planeId: string) {
-  const gun = G.selected_gun
-  if (gun === undefined || !gunsReady().includes(gun)) return
+  const gun = gunById(G.selected_gun)
+  if (!gun || !gunsReady().some(it => it.id === gun.id)) return
   const plane = aaTargets(gun).find(it => it.id === planeId)
   if (!plane) return
   clear_undo()
   G.aa_fired ??= []
-  set_add(G.aa_fired, gun)
+  set_add(G.aa_fired, gun.id)
   delete G.selected_gun
-  const hitFrom = aaHitFrom(gun, plane)!
-  const roll = random(6) + 1
-  const result = roll >= hitFrom ? applyHit(plane, 1) : 'pudło'
-  log(`Działko ${gun} ostrzeliwuje ${plane.plane.nazwa} [${ALTITUDE_NAMES[altitudeOf(plane)]}, odl:${hexDistance(gun, plane.at)}, rzut:${roll}] → ${result}`)
+  const roll = (random(6) + 1) + (random(6) + 1)
+  const description = describeAaShot(gun, plane)
+  const shot = aaShot(gun, plane, roll)
+  if (shot.underFire) plane.under_fire = true
+  const result = shot.damage > 0 ? `trafienie → ${applyHit(plane, shot.damage)}` : shot.underFire ? "pod ostrzałem" : "pudło"
+  log(`Działko ${caliber(gun.heavy)} ${gun.id} ostrzeliwuje ${description} [${ALTITUDE_NAMES[altitudeOf(plane)]}, rzut:${roll}] → ${result}`)
 }
 
 // 3.0, phases 2 and 5: right after the enemy's movement, the guns fire at its planes.
@@ -83,10 +97,13 @@ export const antiAircraft = {
   inactive: "ostrzał przeciwlotniczy",
 
   prompt() {
-    prompt(`Ostrzał przeciwlotniczy: ${ROLES[G.active]}${G.selected_gun ? ` – działko ${G.selected_gun}, wybierz cel` : " – wybierz działko"}`)
-    gunsReady().forEach(gun => action("select_gun", gun))
-    if (G.selected_gun !== undefined)
-      aaTargets(G.selected_gun).forEach(target => action("aa_fire", target.id))
+    const gun = gunById(G.selected_gun)
+    const targets = gun ? aaTargets(gun) : []
+    prompt(`Ostrzał przeciwlotniczy: ${ROLES[G.active]}${gun
+      ? ` – działko ${caliber(gun.heavy)} ${gun.id}, wybierz cel: ${targets.map(it => describeAaShot(gun, it)).join("; ")}`
+      : " – wybierz działko"}`)
+    gunsReady().forEach(it => action("select_gun", it.id))
+    targets.forEach(target => action("aa_fire", target.id))
     button("done", true)
   },
 
@@ -103,14 +120,14 @@ export const antiAircraft = {
 }
 
 export function hasGun(hex: string): boolean {
-  return (G.aa_guns ?? []).includes(hex)
+  return landGuns().some(it => it.hex === hex)
 }
 
-// 7.0.6, 6.2.6
+// 7.0.6, 6.3.6
 export function bombGun(hex: string) {
   const roll = random(6) + 1
   if (roll >= GUN_DESTROYED_FROM) {
-    set_delete(G.aa_guns!, hex)
+    G.aa_guns = landGuns().filter(it => it.hex !== hex)
     log(`Działko ${hex} zbombardowane [rzut:${roll}] → zniszczone`)
   } else {
     log(`Działko ${hex} zbombardowane [rzut:${roll}] → ocalało`)

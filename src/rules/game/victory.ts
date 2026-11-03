@@ -41,7 +41,7 @@ function hasUnitsLeft(side: number): boolean {
     || (G.to_place?.[side] ?? []).length > 0
     || (G.off_board ?? []).some(it => parseInt(it.plane.id) === side)
     || (G.reinforcements?.[side] ?? []).length > 0
-    || (side === R_Jap && (G.aa_guns ?? []).length > 0)
+    || (G.aa_guns ?? []).some(it => it.side === side)
 }
 
 export function isGameOver(): boolean {

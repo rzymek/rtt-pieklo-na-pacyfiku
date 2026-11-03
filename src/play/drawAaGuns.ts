@@ -10,7 +10,8 @@ const MARKER_HEIGHT = MARKER_WIDTH * 77 / 88
 export function drawAaGuns() {
   aaGunsLayer.innerHTML = ""
   clickableAaGunsLayer.innerHTML = ""
-  for (const hex of view.aa_guns ?? []) {
+  for (const {id, heavy, hexes} of view.aa_guns ?? []) {
+    const hex = hexes[0]
     const center = getHexCenterInSVGCoords(hex)
     const x = center.x + 1, y = center.y + 1
     const marker = document.createElementNS(svgNS, 'image')
@@ -19,10 +20,22 @@ export function drawAaGuns() {
     marker.setAttribute('y', String(y))
     marker.setAttribute('width', String(MARKER_WIDTH))
     marker.setAttribute('height', String(MARKER_HEIGHT))
-    if (view.aa_fired?.includes(hex)) marker.setAttribute('opacity', '0.55')
+    if (view.aa_fired?.includes(id)) marker.setAttribute('opacity', '0.55')
+    // 6.0.1, 6.0.2
+    const label = document.createElementNS(svgNS, 'text')
+    label.setAttribute('x', String(x + MARKER_WIDTH))
+    label.setAttribute('y', String(y + MARKER_HEIGHT))
+    label.setAttribute('font-size', '5')
+    label.setAttribute('font-weight', 'bold')
+    label.setAttribute('font-family', 'Arial, Helvetica, sans-serif')
+    label.setAttribute('fill', heavy ? '#c80000' : 'black')
+    label.setAttribute('stroke', 'white')
+    label.setAttribute('stroke-width', '.3')
+    label.textContent = heavy ? 'C' : 'L'
+    label.style.pointerEvents = 'none'
 
-    const isSelected = hex === view.selected_gun
-    const isSelectable = view.actions?.select_gun?.includes(hex)
+    const isSelected = id === view.selected_gun
+    const isSelectable = view.actions?.select_gun?.includes(id)
     if (isSelected || isSelectable) {
       const ring = document.createElementNS(svgNS, 'rect')
       ring.setAttribute('x', String(x))
@@ -36,12 +49,14 @@ export function drawAaGuns() {
       marker.style.cursor = 'pointer'
       marker.addEventListener('click', e => {
         e.stopPropagation()
-        send_action("select_gun", hex)
+        send_action("select_gun", id)
       })
       clickableAaGunsLayer.appendChild(marker)
+      clickableAaGunsLayer.appendChild(label)
     } else {
       marker.style.pointerEvents = 'none'
       aaGunsLayer.appendChild(marker)
+      aaGunsLayer.appendChild(label)
     }
   }
 }

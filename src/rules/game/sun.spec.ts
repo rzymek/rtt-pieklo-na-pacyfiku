@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {G, planes} from "../globals";
 import type {PlaneInstance} from "../types";
 import {ALT_VERY_LOW} from "./altitude";
-import {aaHitFrom} from "./aa";
+import {AaGun, aaPenalty} from "./aa";
 import {rollShot} from "./combat";
 import {sunEdgeFor, sunHexes, sunPenalty} from "./sun";
 
@@ -72,21 +72,23 @@ describe('firing into the sun (5.0.1)', () => {
   });
 });
 
-describe('AA guns (6.2.5)', () => {
+describe('AA guns (6.3.5)', () => {
   const low = (at: string): PlaneInstance => ({...spit(at, N), altitude: ALT_VERY_LOW});
+  const gun = (hex: string): AaGun => ({id: hex, side: 1, heavy: true, hexes: [hex]});
 
-  it('cannot hit a plane against the sun', () => {
+  it('subtract 2 for a plane against the sun', () => {
     G.sun = "W";
-    expect(aaHitFrom("A05.B20", low("A04.B20"))).toBeNull();
+    expect(aaPenalty(gun("A05.B20"), low("A04.B20"))).toBe(2);
+    expect(aaPenalty(gun("A08.B20"), low("A04.B20"))).toBe(2);
   });
 
-  it('can hit it from the other side', () => {
+  it('not from the other side', () => {
     G.sun = "W";
-    expect(aaHitFrom("A03.B20", low("A04.B20"))).toBe(6);
+    expect(aaPenalty(gun("A03.B20"), low("A04.B20"))).toBe(0);
   });
 
-  it('can hit a plane right above the gun', () => {
+  it('not for a plane right above the gun', () => {
     G.sun = "W";
-    expect(aaHitFrom("A04.B20", low("A04.B20"))).toBe(5);
+    expect(aaPenalty(gun("A04.B20"), low("A04.B20"))).toBe(0);
   });
 });
