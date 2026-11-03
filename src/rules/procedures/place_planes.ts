@@ -1,5 +1,5 @@
 import type {PlaneInstance} from "../types";
-import {G, R_Bryt, R_Niem, ROLES} from "../globals";
+import {G, R_Jap, R_Amer, ROLES} from "../globals";
 import {altitudeOf} from "../game/altitude";
 import {hexesAround} from "../game/scenarios";
 import {select_plane} from "./select_plane";
@@ -82,8 +82,8 @@ export const placePlanes = {
     clear_undo()
     delete G.selected_plane
     log(`${ROLES[G.active]}: rozstawiono samoloty`)
-    if (G.active === R_Bryt) {
-      G.active = R_Niem
+    if (G.active === R_Jap) {
+      G.active = R_Amer
     } else {
       delete G.to_place
       goto("move_planes")

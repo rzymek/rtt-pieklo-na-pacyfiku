@@ -1,4 +1,4 @@
-import {G, R_Niem, ROLES, V} from "../globals.js"
+import {G, R_Amer, ROLES, V} from "../globals.js"
 import {exitsFor, flightsFor, possibleMovesFor} from "../game/hex.js"
 import {applyHit} from "../game/combat";
 import {scorePlaneLost} from "../game/victory";
@@ -46,7 +46,7 @@ function exits(plane: PlaneInstance) {
 
 // 8.1: only the Germans fly home through the south edge.
 function southExit(plane: PlaneInstance): string | undefined {
-  return G.active === R_Niem ? exits(plane).find(it => it.south)?.hex : undefined
+  return G.active === R_Amer ? exits(plane).find(it => it.south)?.hex : undefined
 }
 
 function takeOffBoard(plane: PlaneInstance, from: string) {
@@ -217,7 +217,7 @@ export const movePlanes = {
     const plane = selectedPlaneOfTheActiveSide();
     const exit = plane && G.leaving ? exits(plane).find(it => it.hex === hex) : undefined
     if (!plane || !exit) return
-    if (G.active !== R_Niem) {
+    if (G.active !== R_Amer) {
       push_undo()
       takeOffBoard(plane, hex)
     } else if (exit.south) {

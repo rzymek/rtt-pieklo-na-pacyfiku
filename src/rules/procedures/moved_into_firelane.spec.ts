@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
-import {G, L, planes, R_Bryt, R_Niem} from "../globals";
+import {G, L, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {movedIntoFirelane, returnFire} from "./moved_into_firelane";
 import {movePlanes} from "./move_planes";
@@ -24,8 +24,8 @@ function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
   return {id: "1.0", plane: planes.Spit, at: "A20.B20", direction: 0, ...overrides}
 }
 
-function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Bryt) {
-  Object.assign(G, {active, shot: [], moved: [], board: {planes: {[R_Niem]: niem, [R_Bryt]: bryt}}});
+function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Jap) {
+  Object.assign(G, {active, shot: [], moved: [], board: {planes: {[R_Amer]: niem, [R_Jap]: bryt}}});
   delete G.selected_plane;
 }
 
@@ -39,30 +39,30 @@ beforeEach(() => {
 
 describe('moving into a fire line', () => {
   it('gives the enemy the first shot', () => {
-    setup([he111()], [spit()], R_Niem);
+    setup([he111()], [spit()], R_Amer);
     movePlanes.done();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("moved_into_firelane");
   });
 
   it('does not react when the fire line is blocked by a friendly plane (5.3.2)', () => {
-    setup([he111({at: "A20.B22"})], [spit(), spit({id: "1.1", at: "A20.B21", direction: 3})], R_Niem);
+    setup([he111({at: "A20.B22"})], [spit(), spit({id: "1.1", at: "A20.B21", direction: 3})], R_Amer);
     movePlanes.done();
     expect(goto).not.toHaveBeenCalledWith("moved_into_firelane");
   });
 
   it('jammed planes cannot react, but get to clear their guns (5.3.4)', () => {
-    setup([he111({jammed: true})], [spit({jammed: true})], R_Niem);
+    setup([he111({jammed: true})], [spit({jammed: true})], R_Amer);
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("combat");
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
   });
 
   it('goes straight to the next move phase when nobody can act', () => {
-    setup([he111({at: "A30.B30"})], [spit()], R_Niem);
+    setup([he111({at: "A30.B30"})], [spit()], R_Amer);
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("move_planes");
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
   });
 });
 
@@ -78,7 +78,7 @@ describe('reaction fire', () => {
     movedIntoFirelane.attack();
     expect(target.damaged).toBe(true);
     expect(G.shot).toEqual(["1.0"]);
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("combat");
   });
 
@@ -87,13 +87,13 @@ describe('reaction fire', () => {
     G.selected_plane = "1.0";
     roll(1, 2);
     movedIntoFirelane.attack();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenLastCalledWith("move_planes");
     expect(G.shot).toEqual([]);
     goto.mockClear();
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("combat");
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
   });
 
   it('a damaged plane fires with the reduced attack (2.1.1)', () => {
@@ -118,7 +118,7 @@ describe('reaction fire', () => {
     setup([he111()], [spit(), ahead]);
     movedIntoFirelane.done();
     expect(G.shot).toEqual([]);
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("combat");
   });
 });
@@ -155,7 +155,7 @@ describe('coinciding fire lines', () => {
   it('lets the target shoot back before the hit takes effect', () => {
     const {a} = mutual();
     expect(a.destroyed).toBeUndefined();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("return_fire", {shooter: "1.0", target: "0.0"});
   });
 

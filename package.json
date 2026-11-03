@@ -1,5 +1,5 @@
 {
-  "name": "lew-morski",
+  "name": "pieklo-na-pacyfiku",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "build:test": "CI=1 vitest",
     "build:lint": "oxlint",
     "test": "vitest",
-    "fuzz": "cd ../../server && bin/rtt-fuzz lew-morski"
+    "fuzz": "cd ../../server && bin/rtt-fuzz pieklo-na-pacyfiku"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

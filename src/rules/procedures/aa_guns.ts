@@ -1,5 +1,5 @@
 import type {PlaneInstance} from "../types";
-import {G, L, R_Bryt, R_Niem, ROLES} from "../globals";
+import {G, L, R_Jap, R_Amer, ROLES} from "../globals";
 import {aaHitFrom, canPlaceGun, GUN_DESTROYED_FROM} from "../game/aa";
 import {ALTITUDE_NAMES, altitudeOf} from "../game/altitude";
 import {applyHit} from "../game/combat";
@@ -32,18 +32,18 @@ export const placeAaGuns = {
   done() {
     if (gunsLeftToPlace() > 0) return
     clear_undo()
-    log(`${ROLES[R_Bryt]}: rozstawiono działka p-lot (${G.aa_guns!.length})`)
+    log(`${ROLES[R_Jap]}: rozstawiono działka p-lot (${G.aa_guns!.length})`)
     goto("place_planes")
   },
 }
 
 export function aaTargets(gun: string): PlaneInstance[] {
-  return G.board.planes[R_Niem].filter(plane => aaHitFrom(gun, plane) !== null)
+  return G.board.planes[R_Amer].filter(plane => aaHitFrom(gun, plane) !== null)
 }
 
 // 6.1, 6.2.1: only in the British combat phase, one shot per gun.
 export function gunsReady(): string[] {
-  if (G.active !== R_Bryt) return []
+  if (G.active !== R_Jap) return []
   return (G.aa_guns ?? []).filter(gun => !set_has(G.aa_fired ?? [], gun) && aaTargets(gun).length > 0)
 }
 

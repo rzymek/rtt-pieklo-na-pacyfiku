@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {planes, R_Bryt, R_Niem} from "../globals";
+import {planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {ALT_LOW} from "./altitude";
 import {fireLineHexes, firstOnFireLine, rollShot} from "./combat";
@@ -96,9 +96,9 @@ describe('fire line (5.0.5)', () => {
 
   it('keeps a plane in a cloud from reaching further targets', () => {
     const shooter = spit(CLOUD);
-    const allPlanes = {[R_Niem]: [he111("A30.B38")], [R_Bryt]: [shooter]};
+    const allPlanes = {[R_Amer]: [he111("A30.B38")], [R_Jap]: [shooter]};
     expect(firstOnFireLine(shooter, allPlanes)).toBeNull();
-    allPlanes[R_Niem][0].at = "A30.B37";
+    allPlanes[R_Amer][0].at = "A30.B37";
     expect(firstOnFireLine(shooter, allPlanes)?.distance).toBe(1);
   });
 });

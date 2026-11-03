@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
-import {G, planes, R_Bryt, R_Niem} from "../globals";
+import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {maxSpeedAt} from "../game/altitude";
 import {flightsFor} from "../game/hex";
@@ -27,13 +27,13 @@ function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
 
 function setup(niem: PlaneInstance[], flownOver: Record<string, string[]> = {}, moved: string[] = []) {
   Object.assign(G, {
-    active: R_Niem,
+    active: R_Amer,
     shot: [],
     moved,
     targets: ["A20.B21", "A20.B22", "A20.B23", "A30.B30"],
     bombed: [],
     flown_over: flownOver,
-    board: {planes: {[R_Niem]: niem, [R_Bryt]: [spit()]}},
+    board: {planes: {[R_Amer]: niem, [R_Jap]: [spit()]}},
   });
   delete G.selected_plane;
 }
@@ -55,12 +55,12 @@ beforeEach(() => {
 
 describe('flight path', () => {
   it('lists the hexes entered, without the starting one', () => {
-    const flights = flightsFor(he111(), {[R_Niem]: [he111()]});
+    const flights = flightsFor(he111(), {[R_Amer]: [he111()]});
     expect(flights["A20.B23"]).toEqual({direction: 0, path: ["A20.B21", "A20.B22", "A20.B23"]});
   });
 
   it('follows the turn', () => {
-    const flights = flightsFor(he111(), {[R_Niem]: [he111()]});
+    const flights = flightsFor(he111(), {[R_Amer]: [he111()]});
     expect(flights["A21.B23"]).toEqual({direction: 1, path: ["A20.B21", "A20.B22", "A21.B23"]});
   });
 });
@@ -200,7 +200,7 @@ describe('bombing', () => {
     expect(actionsOf(movePlanes.prompt)).toEqual([]);
     G.selected_plane = "0.0";
     movePlanes.bomb("A20.B21");
-    expect(G.board.planes[R_Niem][0].bombs_dropped).toBeUndefined();
+    expect(G.board.planes[R_Amer][0].bombs_dropped).toBeUndefined();
   });
 
   it('the selected plane can be deselected', () => {

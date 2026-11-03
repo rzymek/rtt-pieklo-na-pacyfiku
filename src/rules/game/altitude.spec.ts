@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {G, planes, R_Bryt, R_Niem} from "../globals";
+import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {ALT_HIGH, ALT_LOW, ALT_VERY_LOW, canChangeAltitude, maxSpeedAt} from "./altitude";
 import {firstOnFireLine} from "./combat";
@@ -65,41 +65,41 @@ describe('movesMapFor', () => {
     const at = "A20.B23";
 
     it('cannot enter or fly through a hex occupied at the same altitude', () => {
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at})]});
       expect(moves).not.toHaveProperty([at]);
       expect(moves).not.toHaveProperty(["A20.B24"]);
     });
 
     it('also applies to friendly planes', () => {
-      const moves = movesMapFor(spit(), {[R_Bryt]: [spit({id: "1.1", at})]});
+      const moves = movesMapFor(spit(), {[R_Jap]: [spit({id: "1.1", at})]});
       expect(moves).not.toHaveProperty([at]);
     });
 
     it('allows a hex occupied at another altitude', () => {
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at, altitude: ALT_LOW})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_LOW})]});
       expect(moves).toHaveProperty([at]);
       expect(moves).toHaveProperty(["A20.B24"]);
     });
 
     it('checks the altitude the plane will end its move at', () => {
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at, altitude: ALT_LOW})]}, ALT_LOW);
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, altitude: ALT_LOW})]}, ALT_LOW);
       expect(moves).not.toHaveProperty([at]);
     });
 
     it('ignores destroyed planes', () => {
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at, destroyed: true})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at, destroyed: true})]});
       expect(moves).toHaveProperty([at]);
     });
 
     it('can turn away before the occupied hex', () => {
       const free = movesMapFor(spit(), {});
       const turned = Object.keys(free).find(hex => free[hex] !== 0)!;
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at})]});
       expect(moves).toHaveProperty([turned]);
     });
 
     it('cannot turn into an occupied hex or past it', () => {
-      const moves = movesMapFor(spit(), {[R_Niem]: [he111({at: "A22.B23"})]});
+      const moves = movesMapFor(spit(), {[R_Amer]: [he111({at: "A22.B23"})]});
       expect(moves).not.toHaveProperty(["A22.B23"]);
       expect(moves).not.toHaveProperty(["A23.B24"]);
     });
@@ -109,7 +109,7 @@ describe('movesMapFor', () => {
 describe('fire across altitudes', () => {
   it('firstOnFireLine ignores planes at another altitude', () => {
     const target = he111({altitude: ALT_LOW});
-    const board = {[R_Bryt]: [spit()], [R_Niem]: [target]};
+    const board = {[R_Jap]: [spit()], [R_Amer]: [target]};
     expect(firstOnFireLine(spit(), board)).toBeNull();
     expect(firstOnFireLine(spit({altitude: ALT_LOW}), board)?.plane).toBe(target);
   });
@@ -117,14 +117,14 @@ describe('fire across altitudes', () => {
   it('a plane at another altitude does not block the line', () => {
     const blocker = he111({id: "0.1", at: "A20.B21", altitude: ALT_LOW});
     const target = he111();
-    const board = {[R_Bryt]: [spit()], [R_Niem]: [blocker, target]};
+    const board = {[R_Jap]: [spit()], [R_Amer]: [blocker, target]};
     expect(firstOnFireLine(spit(), board)?.plane).toBe(target);
   });
 
   it('planesInFirelane counts only shooters at the same altitude', () => {
-    G.board = {planes: {[R_Bryt]: [spit()], [R_Niem]: [he111({altitude: ALT_LOW})]}};
-    expect(planesInFirelane(R_Niem)).toEqual([]);
-    G.board = {planes: {[R_Bryt]: [spit({altitude: ALT_LOW})], [R_Niem]: [he111({altitude: ALT_LOW})]}};
-    expect(planesInFirelane(R_Niem).map(it => it.id)).toEqual(["0.0"]);
+    G.board = {planes: {[R_Jap]: [spit()], [R_Amer]: [he111({altitude: ALT_LOW})]}};
+    expect(planesInFirelane(R_Amer)).toEqual([]);
+    G.board = {planes: {[R_Jap]: [spit({altitude: ALT_LOW})], [R_Amer]: [he111({altitude: ALT_LOW})]}};
+    expect(planesInFirelane(R_Amer).map(it => it.id)).toEqual(["0.0"]);
   });
 });

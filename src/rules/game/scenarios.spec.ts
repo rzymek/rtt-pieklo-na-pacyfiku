@@ -5,7 +5,7 @@ import {hexesAround, SCENARIOS} from "./scenarios";
 const MAP_HEXES = new Set([...svg.matchAll(/id="(A\d+\.B\d+)"/g)].map(m => m[1]));
 
 describe.each(Object.entries(SCENARIOS))('%s', (_name, scenario) => {
-  const sides = [scenario.brytyjczycy, scenario.niemcy];
+  const sides = [scenario.japonczycy, scenario.amerykanie];
   const starting = sides.flatMap(side => side.deployments.flatMap(({center, radius, planes}) =>
     hexesAround(center, radius).slice(0, planes.length)));
 

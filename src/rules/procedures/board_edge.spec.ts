@@ -2,7 +2,7 @@
 /* oxlint-disable vitest/no-conditional-expect */
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
-import {G, planes, R_Bryt, R_Niem, V} from "../globals";
+import {G, planes, R_Jap, R_Amer, V} from "../globals";
 import {on_view} from "../lifecycle/on_view";
 import type {PlaneInstance} from "../types";
 import {exitsFor, flightsFor, isEdgeHex} from "../game/hex";
@@ -29,13 +29,13 @@ function plane(id: string, type: keyof typeof planes, overrides: Partial<PlaneIn
   return {id, plane: planes[type], at: "A20.B20", direction: N, ...overrides}
 }
 
-function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Niem) {
+function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Amer) {
   for (const key of Object.keys(G)) delete (G as any)[key];
   Object.assign(G, {
     active, stage: 3, moved: [], shot: [], flown_over: {}, aa_guns: [], aa_fired: [], off_board: [], targets: [], bombed: [],
-    vp: {[R_Niem]: 0, [R_Bryt]: 0}, min_vp: {[R_Niem]: 10, [R_Bryt]: 10},
-    reinforcements: {[R_Niem]: [], [R_Bryt]: []},
-    board: {planes: {[R_Niem]: niem, [R_Bryt]: bryt}},
+    vp: {[R_Amer]: 0, [R_Jap]: 0}, min_vp: {[R_Amer]: 10, [R_Jap]: 10},
+    reinforcements: {[R_Amer]: [], [R_Jap]: []},
+    board: {planes: {[R_Amer]: niem, [R_Jap]: bryt}},
   });
 }
 
@@ -65,9 +65,9 @@ function leave(from: PlaneInstance, hex: string) {
 describe('board limits', () => {
   it('offers no flights off the board', () => {
     const it = plane("0.0", "ME109", {at: EAST_EDGE, direction: EAST});
-    const flights = flightsFor(it, {[R_Niem]: [it]});
+    const flights = flightsFor(it, {[R_Amer]: [it]});
     expect(Object.keys(flights).every(hex => parseInt(hex.slice(1)) <= 43)).toBe(true);
-    expect(exitsFor(it, {[R_Niem]: [it]})).toContainEqual({hex: EAST_EDGE, south: false});
+    expect(exitsFor(it, {[R_Amer]: [it]})).toContainEqual({hex: EAST_EDGE, south: false});
   });
 
   it('knows the edge hexes', () => {
@@ -79,9 +79,9 @@ describe('board limits', () => {
 describe('4.3: leaving the board', () => {
   it('British: no die, comes back in 5 stages', () => {
     const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
-    setup([], [it], R_Bryt);
+    setup([], [it], R_Jap);
     leave(it, EAST_EDGE);
-    expect(G.board.planes[R_Bryt]).toEqual([]);
+    expect(G.board.planes[R_Jap]).toEqual([]);
     expect(G.off_board).toEqual([{plane: it, return_stage: 8, from: EAST_EDGE}]);
   });
 
@@ -99,13 +99,13 @@ describe('4.3: leaving the board', () => {
       leave(it, EAST_EDGE);
       if (outcome === "destroyed") {
         expect(it.destroyed).toBe(true);
-        expect(G.vp).toEqual({[R_Niem]: -1, [R_Bryt]: 2});
+        expect(G.vp).toEqual({[R_Amer]: -1, [R_Jap]: 2});
         expect(G.off_board).toEqual([]);
       } else {
         expect(it.destroyed).toBeUndefined();
         expect(!!it.damaged).toBe(outcome === "damaged");
         expect(G.off_board![0].return_stage).toBe(8);
-        expect(G.vp).toEqual({[R_Niem]: 0, [R_Bryt]: 0});
+        expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
       }
     });
   });
@@ -132,7 +132,7 @@ describe('4.3: leaving the board', () => {
       expect(buttons(movePlanes)).toEqual(["leave_forever"]);
       movePlanes.leave_forever();
       expect(it).toMatchObject({destroyed: true, left_board: true});
-      expect(G.vp).toEqual({[R_Niem]: 0, [R_Bryt]: 0});
+      expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
     });
 
     it('may come back', () => {
@@ -147,13 +147,13 @@ describe('4.3: leaving the board', () => {
       movePlanes.leave_forever();
       expect(it).toMatchObject({destroyed: true, left_board: true});
       expect(G.off_board).toEqual([]);
-      expect(G.vp).toEqual({[R_Niem]: 0, [R_Bryt]: 0});
+      expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
     });
   });
 
   it('no leave_board button while choosing the exit hex', () => {
     const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
-    setup([], [it], R_Bryt);
+    setup([], [it], R_Jap);
     G.selected_plane = it.id;
     movePlanes.leave_board();
     expect(buttons(movePlanes)).toEqual([]);
@@ -161,16 +161,16 @@ describe('4.3: leaving the board', () => {
 
   it('a plane waiting to return is out of reach, yet still counts as a unit', () => {
     const it = plane("1.0", "Spit", {at: EAST_EDGE, direction: EAST});
-    setup([plane("0.0", "HE111", {at: "A42.B30", direction: EAST})], [it], R_Bryt);
+    setup([plane("0.0", "HE111", {at: "A42.B30", direction: EAST})], [it], R_Jap);
     leave(it, EAST_EDGE);
-    expect(fireTarget(G.board.planes[R_Niem][0], R_Niem)).toBeNull();
-    G.board.planes[R_Bryt] = [];
+    expect(fireTarget(G.board.planes[R_Amer][0], R_Amer)).toBeNull();
+    G.board.planes[R_Jap] = [];
     expect(isGameOver()).toBe(false);
   });
 
   it('comes back after 5 stages, on a free edge hex within 5 hexes, then moves as usual (4.3.1)', () => {
     const it = plane("0.0", "HE111", {at: EAST_EDGE});
-    setup([plane("0.1", "HE111", {at: "A43.B31"})], [plane("1.0", "Spit", {at: "A10.B20"})], R_Bryt);
+    setup([plane("0.1", "HE111", {at: "A43.B31"})], [plane("1.0", "Spit", {at: "A10.B20"})], R_Jap);
     G.off_board = [{plane: it, return_stage: 4, from: EAST_EDGE}];
     endCombat();
     expect(G.stage).toBe(4);
@@ -186,7 +186,7 @@ describe('4.3: leaving the board', () => {
     expect(it.at).toBe(EAST_EDGE);
     returnPlanes.return_hex("A43.B35");
     expect(it.at).toBe("A43.B35");
-    expect(G.board.planes[R_Niem]).toContain(it);
+    expect(G.board.planes[R_Amer]).toContain(it);
     expect(nextToReturn()).toBeUndefined();
 
     returnPlanes.turn_left();
@@ -202,7 +202,7 @@ describe('4.3: leaving the board', () => {
     G.off_board = [{plane: it, return_stage: 8, from: EAST_EDGE}];
     on_view();
     const [waiting] = V.off_board!;
-    expect(waiting).toMatchObject({side: R_Niem, return_stage: 8});
+    expect(waiting).toMatchObject({side: R_Amer, return_stage: 8});
     expect(waiting.hexes).toEqual(returnHexes(G.off_board[0]));
     expect(waiting.hexes).toContain("A43.B35");
     expect(waiting.hexes).not.toContain("A43.B31");
@@ -210,12 +210,12 @@ describe('4.3: leaving the board', () => {
 
   it('does not come back too early, and reinforcements get an unused id', () => {
     const it = plane("1.0", "Spit");
-    setup([plane("0.0", "HE111")], [], R_Niem);
+    setup([plane("0.0", "HE111")], [], R_Amer);
     G.off_board = [{plane: it, return_stage: 8, from: EAST_EDGE}];
-    G.reinforcements![R_Bryt] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
+    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
     endCombat();
     expect(goto).toHaveBeenCalledWith("move_planes");
-    expect(G.board.planes[R_Bryt][0].id).toBe("1.1");
+    expect(G.board.planes[R_Jap][0].id).toBe("1.1");
   });
 });
 
@@ -227,7 +227,7 @@ describe('no own plane on the board', () => {
     setup([plane("0.0", "HE111")], []);
     G.off_board = [offBoard("1.0", 8)];
     endCombat();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(G.stage).toBe(4);
     expect(goto).toHaveBeenCalledTimes(1);
     expect(goto).toHaveBeenCalledWith("move_planes");
@@ -237,22 +237,22 @@ describe('no own plane on the board', () => {
     setup([plane("0.0", "HE111")], [plane("1.0", "Spit", {destroyed: true})]);
     G.off_board = [offBoard("1.1", 8)];
     endCombat();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
   });
 
   it('keeps the movement phase when a plane returns or a reinforcement enters', () => {
     setup([plane("0.0", "HE111")], []);
     G.off_board = [offBoard("1.0", 3)];
     endCombat();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("return_planes");
 
     goto.mockClear();
     setup([plane("0.0", "HE111")], []);
     G.off_board = [offBoard("1.0", 8)];
-    G.reinforcements![R_Bryt] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
+    G.reinforcements![R_Jap] = [{stage: 3, plane: planes.Spit, at: "A01.B09", direction: 1}];
     endCombat();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("move_planes");
   });
 
@@ -262,7 +262,7 @@ describe('no own plane on the board', () => {
     G.off_board = [offBoard("1.0", 8)];
     G.aa_guns = ["A20.B20"];
     endCombat();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledTimes(1);
     expect(goto).toHaveBeenCalledWith("combat");
   });
@@ -271,7 +271,7 @@ describe('no own plane on the board', () => {
     setup([], []);
     G.off_board = [offBoard("0.0", 6), offBoard("1.0", 8)];
     endCombat();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(G.stage).toBe(6);
     expect(goto).toHaveBeenCalledTimes(1);
     expect(goto).toHaveBeenCalledWith("return_planes");
@@ -300,7 +300,7 @@ describe('4.2.6: no free way to fly', () => {
     expect(isForced(he)).toBe(true);
     G.selected_plane = he.id;
     const on = plane("1.5", "Spit", {at: "A20.B23"});
-    G.board.planes[R_Bryt].push(on);
+    G.board.planes[R_Jap].push(on);
     roll(3);
     movePlanes.move_hex("A20.B23");
     expect(he.at).toBe("A20.B23");
@@ -312,12 +312,12 @@ describe('4.2.6: no free way to fly', () => {
     const he = boxed();
     G.selected_plane = he.id;
     const on = plane("1.5", "Spit", {at: "A20.B23"});
-    G.board.planes[R_Bryt].push(on);
+    G.board.planes[R_Jap].push(on);
     roll(6);
     movePlanes.move_hex("A20.B23");
     expect(he.destroyed).toBe(true);
     expect(on.destroyed).toBe(true);
-    expect(G.vp).toEqual({[R_Niem]: -2, [R_Bryt]: -1});
+    expect(G.vp).toEqual({[R_Amer]: -2, [R_Jap]: -1});
   });
 });
 
@@ -330,9 +330,9 @@ describe('5.3.4: unjamming', () => {
     combat.unjam();
     expect(it.jammed).toBeUndefined();
     G.shot = [];
-    expect(fireTarget(it, R_Niem)).toBeNull();
+    expect(fireTarget(it, R_Amer)).toBeNull();
     G.stage++;
-    expect(fireTarget(it, R_Niem)).not.toBeNull();
+    expect(fireTarget(it, R_Amer)).not.toBeNull();
   });
 });
 
@@ -350,7 +350,7 @@ describe('ending the combat phase', () => {
     combat.done();
     combat.confirm_done();
     expect(G.confirm_done).toBeUndefined();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
   });
 
   it('ends at once once every plane has fired', () => {
@@ -358,7 +358,7 @@ describe('ending the combat phase', () => {
     G.shot = ["0.0"];
     combat.done();
     expect(G.confirm_done).toBeUndefined();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
   });
 });
 
@@ -378,7 +378,7 @@ describe('undo after the movement phase', () => {
     G.moved = [me.id];
     movePlanes.done();
     expect(pushUndo).toHaveBeenCalledTimes(1);
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("combat");
     expect(clearUndo).not.toHaveBeenCalled();
 

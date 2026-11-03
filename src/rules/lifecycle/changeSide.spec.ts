@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {G, R_Bryt, R_Niem} from "../globals";
+import {G, R_Jap, R_Amer} from "../globals";
 import {changeSide, otherSide} from "./changeSide";
 
 vi.mock("../globals", async importOriginal => ({
@@ -9,17 +9,17 @@ vi.mock("../globals", async importOriginal => ({
 
 describe('otherSide', () => {
   it('returns the opposite side', () => {
-    expect(otherSide(R_Niem)).toBe(R_Bryt);
-    expect(otherSide(R_Bryt)).toBe(R_Niem);
+    expect(otherSide(R_Amer)).toBe(R_Jap);
+    expect(otherSide(R_Jap)).toBe(R_Amer);
   });
 });
 
 describe('changeSide', () => {
   it('toggles G.active', () => {
-    G.active = R_Niem;
+    G.active = R_Amer;
     changeSide();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     changeSide();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
   });
 });

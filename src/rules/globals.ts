@@ -55,7 +55,7 @@ export const P: Record<string, StateDefinition | string | Array<() => void>> = {
 
 // framework.js links to these by name: they have to stay declared at the top level of this bundle.
 export const ROLES = [...ROLE_NAMES]
-export const R_Niem = 0
-export const R_Bryt = 1
-export const sides = [R_Niem, R_Bryt];
+export const R_Amer = 0
+export const R_Jap = 1
+export const sides = [R_Amer, R_Jap];
 export const planes = data.planes

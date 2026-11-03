@@ -30,8 +30,8 @@ export interface Side {
 }
 
 export interface Scenario {
-  brytyjczycy: Side & { aa_guns?: number }
-  niemcy: Side
+  japonczycy: Side & { aa_guns?: number }
+  amerykanie: Side
   targets: string[]
   // 9.2: awarded only for bombing all the targets.
   all_targets_vp?: number
@@ -50,22 +50,22 @@ const ALL_TARGETS = [
 
 export const SCENARIOS: Record<string, Scenario> = {
   "Wariant 1": {
-    brytyjczycy: {
+    japonczycy: {
       deployments: [{center: 'A10.B08', radius: 1, direction: NE, planes: [SpitL, Spit, Spit]}],
       min_vp: 15,
     },
-    niemcy: {
+    amerykanie: {
       deployments: [{center: 'A40.B35', radius: 2, direction: SW, planes: [...times(2, ME110), ...times(4, HE111)]}],
       min_vp: 10,
     },
     targets: ['A06.B19', 'A16.B24'],
   },
   "Wariant 2": {
-    brytyjczycy: {
+    japonczycy: {
       deployments: [{center: 'A03.B08', radius: 3, direction: NE, planes: [...times(2, Hur), ...times(3, Spit)]}],
       min_vp: 23,
     },
-    niemcy: {
+    amerykanie: {
       deployments: [{
         center: 'A39.B44', radius: 4, direction: SW,
         planes: [...times(3, ME109), ...times(3, ME110), ...times(4, HE111), ...times(4, JU88)],
@@ -76,12 +76,12 @@ export const SCENARIOS: Record<string, Scenario> = {
     all_targets_vp: 3,
   },
   "Wariant 3": {
-    brytyjczycy: {
+    japonczycy: {
       deployments: [{center: 'A08.B17', radius: 3, direction: NE, planes: [SpitL, ...times(6, Spit)]}],
       aa_guns: 12,
       min_vp: 8,
     },
-    niemcy: {
+    amerykanie: {
       deployments: [{center: 'A39.B44', radius: 4, direction: SW, planes: [ME110L, ...times(4, ME110)]}],
       min_vp: 20,
     },
@@ -89,7 +89,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     all_targets_vp: 20,
   },
   "Wariant 4": {
-    brytyjczycy: {
+    japonczycy: {
       deployments: [{center: 'A01.B22', radius: 1, direction: SE, planes: [HurL, Hur, Hur]}],
       reinforcements: [
         {stage: 3, plane: Spit, at: 'A01.B09', direction: NE},
@@ -105,7 +105,7 @@ export const SCENARIOS: Record<string, Scenario> = {
       aa_guns: 24,
       min_vp: 33,
     },
-    niemcy: {
+    amerykanie: {
       deployments: [{center: 'A39.B28', radius: 3, direction: NW, planes: [ME109L, ...times(6, ME109), ...times(12, HE111)]}],
       min_vp: 33,
     },
@@ -113,7 +113,7 @@ export const SCENARIOS: Record<string, Scenario> = {
     all_targets_vp: 5,
   },
   "Wariant 5": {
-    brytyjczycy: {
+    japonczycy: {
       deployments: [{center: 'A01.B21', radius: 3, direction: SE, planes: [SpitL, ...times(6, Spit)]}],
       reinforcements: [
         {stage: 10, plane: HurL, at: 'A42.B48', direction: SW},
@@ -123,7 +123,7 @@ export const SCENARIOS: Record<string, Scenario> = {
       aa_guns: 26,
       min_vp: 55,
     },
-    niemcy: {
+    amerykanie: {
       deployments: [
         {center: 'A41.B46', radius: 3, direction: SW, planes: [...times(3, ME109), ...times(8, JU88)]},
         {center: 'A41.B25', radius: 3, direction: NW, planes: [ME110L, ...times(5, ME110), ...times(8, HE111)]},

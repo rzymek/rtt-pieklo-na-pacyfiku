@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {stubFramework} from "@rzymek/rally-the-troops-module/testing";
-import {G, L, planes, R_Bryt, R_Niem} from "../globals";
+import {G, L, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {ALT_LOW, ALT_VERY_LOW} from "../game/altitude";
 import {on_setup} from "../lifecycle/on_setup";
@@ -30,10 +30,10 @@ function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
   return {id: "0.0", plane: planes.HE111, at: GUN, direction: 3, altitude: ALT_LOW, ...overrides}
 }
 
-function setup(niem: PlaneInstance[], guns = [GUN], active = R_Bryt) {
+function setup(niem: PlaneInstance[], guns = [GUN], active = R_Jap) {
   Object.assign(G, {
     active, shot: [], moved: [], targets: [], bombed: [], flown_over: {}, aa_guns: guns, aa_fired: [],
-    board: {planes: {[R_Niem]: niem, [R_Bryt]: []}},
+    board: {planes: {[R_Amer]: niem, [R_Jap]: []}},
   });
   delete G.selected_plane;
   delete G.selected_gun;
@@ -70,14 +70,14 @@ describe('setup (6)', () => {
   it('starts with the British placing the guns of the scenario', () => {
     roll(1);
     on_setup("Wariant 3", undefined);
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(call).toHaveBeenCalledWith("place_aa_guns", {count: 12});
   });
 
   it('is skipped in a scenario without guns', () => {
     roll(1);
     on_setup("Wariant 1", undefined);
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(call).toHaveBeenCalledWith("place_planes");
   });
 
@@ -103,7 +103,7 @@ describe('setup (6)', () => {
     placeAaGuns.place_gun(FAR);
     expect(G.aa_guns).toHaveLength(2);
     placeAaGuns.done();
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("place_planes");
   });
 });
@@ -150,13 +150,13 @@ describe('firing', () => {
     setup([he111()]);
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("combat");
-    expect(G.active).toBe(R_Bryt);
+    expect(G.active).toBe(R_Jap);
   });
 
   it('is not possible in the German combat phase (6.1)', () => {
-    setup([he111()], [GUN], R_Niem);
+    setup([he111()], [GUN], R_Amer);
     // A British plane on the board, or their movement phase would be skipped.
-    G.board.planes[R_Bryt].push({id: "1.0", plane: planes.Spit, at: "A40.B40", direction: 0});
+    G.board.planes[R_Jap].push({id: "1.0", plane: planes.Spit, at: "A40.B40", direction: 0});
     expect(actions(combat)).toEqual([]);
     movePlanes.done();
     expect(goto).toHaveBeenCalledWith("move_planes");
@@ -203,13 +203,13 @@ describe('firing', () => {
   it('can be declined (6.2.4)', () => {
     setup([he111()]);
     combat.done();
-    expect(G.active).toBe(R_Niem);
+    expect(G.active).toBe(R_Amer);
   });
 });
 
 describe('bombing a gun (6.2.6, 7.0.6)', () => {
   function bomb(value: number) {
-    setup([he111()], [ADJACENT], R_Niem);
+    setup([he111()], [ADJACENT], R_Amer);
     G.moved = ["0.0"];
     G.flown_over = {"0.0": [ADJACENT]};
     G.selected_plane = "0.0";
@@ -218,7 +218,7 @@ describe('bombing a gun (6.2.6, 7.0.6)', () => {
   }
 
   it('offers a hex with a gun, without marking it as a bombed target', () => {
-    setup([he111()], [ADJACENT], R_Niem);
+    setup([he111()], [ADJACENT], R_Amer);
     G.moved = ["0.0"];
     G.flown_over = {"0.0": [ADJACENT]};
     G.selected_plane = "0.0";

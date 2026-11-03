@@ -1,4 +1,4 @@
-import {G, R_Niem, ROLES} from "../globals";
+import {G, R_Amer, ROLES} from "../globals";
 import {ALT_HIGH, altitudeOf} from "../game/altitude";
 import {hexesAround} from "../game/scenarios";
 import {changeSide} from "../lifecycle/changeSide";
@@ -22,7 +22,7 @@ export function endCombat() {
   delete G.selected_plane
   delete G.selected_gun
   changeSide()
-  if (G.active === R_Niem) {
+  if (G.active === R_Amer) {
     G.stage++
     // 2.0
     log(`Etap ${G.stage}`)

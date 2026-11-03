@@ -1,5 +1,5 @@
 import type {PlaneInstance} from "../types";
-import {G, R_Bryt, R_Niem, ROLES} from "../globals";
+import {G, R_Jap, R_Amer, ROLES} from "../globals";
 import {otherSide} from "../lifecycle/changeSide";
 
 // Table 1
@@ -11,7 +11,7 @@ const VP_BOMBER_LOST = -2
 
 // 8.0: the score can go below zero.
 function addVp(side: number, points: number, reason: string) {
-  G.vp ??= {[R_Niem]: 0, [R_Bryt]: 0}
+  G.vp ??= {[R_Amer]: 0, [R_Jap]: 0}
   G.vp[side] += points
   log(`${ROLES[side]}: ${points > 0 ? "+" : ""}${points} PZ (${reason}) → ${G.vp[side]} PZ`)
 }
@@ -21,18 +21,18 @@ function addVp(side: number, points: number, reason: string) {
 export function scorePlaneLost(plane: PlaneInstance, {shotDown = true} = {}) {
   const name = plane.plane.nazwa
   const side = parseInt(plane.id)
-  const bomber = side === R_Niem && !!plane.plane.bombowiec
+  const bomber = side === R_Amer && !!plane.plane.bombowiec
   addVp(side, bomber ? VP_BOMBER_LOST : VP_FIGHTER_LOST, `stracony ${name}`)
   if (shotDown) addVp(otherSide(side), bomber ? VP_BOMBER_SHOT_DOWN : VP_FIGHTER_SHOT_DOWN, `zestrzelony ${name}`)
 }
 
 export function scoreBombOnTarget(hex: string) {
-  addVp(R_Niem, VP_BOMB_ON_TARGET, `bomby na ${hex}`)
+  addVp(R_Amer, VP_BOMB_ON_TARGET, `bomby na ${hex}`)
 }
 
 // 9.2
 export function scoreAllTargetsBombed() {
-  if (G.all_targets_vp) addVp(R_Niem, G.all_targets_vp, "zbombardowane wszystkie cele")
+  if (G.all_targets_vp) addVp(R_Amer, G.all_targets_vp, "zbombardowane wszystkie cele")
 }
 
 // 8.1: planes yet to come count as well, or a side could lose before they enter.
@@ -41,11 +41,11 @@ function hasUnitsLeft(side: number): boolean {
     || (G.to_place?.[side] ?? []).length > 0
     || (G.off_board ?? []).some(it => parseInt(it.plane.id) === side)
     || (G.reinforcements?.[side] ?? []).length > 0
-    || (side === R_Bryt && (G.aa_guns ?? []).length > 0)
+    || (side === R_Jap && (G.aa_guns ?? []).length > 0)
 }
 
 export function isGameOver(): boolean {
-  return !hasUnitsLeft(R_Niem) || !hasUnitsLeft(R_Bryt)
+  return !hasUnitsLeft(R_Amer) || !hasUnitsLeft(R_Jap)
 }
 
 // 8.2: the fewest points missing, then the larger percentage of the required points. null = a draw.
@@ -53,13 +53,13 @@ export function isGameOver(): boolean {
 export function winner(vp: Record<number, number>, min: Record<number, number>): number | null {
   const missing = (side: number) => min[side] - vp[side]
   // Cross-multiplied percentages, to stay away from comparing floats.
-  const compared = missing(R_Bryt) - missing(R_Niem) || vp[R_Niem] * min[R_Bryt] - vp[R_Bryt] * min[R_Niem]
-  return compared > 0 ? R_Niem : compared < 0 ? R_Bryt : null
+  const compared = missing(R_Jap) - missing(R_Amer) || vp[R_Amer] * min[R_Jap] - vp[R_Jap] * min[R_Amer]
+  return compared > 0 ? R_Amer : compared < 0 ? R_Jap : null
 }
 
 function endGame() {
   const vp = G.vp!, min = G.min_vp!
-  const score = [R_Niem, R_Bryt].map(side => `${ROLES[side]} ${vp[side]}/${min[side]} PZ`).join(", ")
+  const score = [R_Amer, R_Jap].map(side => `${ROLES[side]} ${vp[side]}/${min[side]} PZ`).join(", ")
   const side = winner(vp, min)
   delete G.selected_plane
   delete G.selected_altitude
