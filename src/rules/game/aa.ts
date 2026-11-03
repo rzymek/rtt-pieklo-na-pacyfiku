@@ -24,20 +24,20 @@ export interface AaGun {
 }
 
 type Range = [number, number] | null
-const R = (from: number, to = from): Range => [from, to]
+const rolls = (from: number, to = from): Range => [from, to]
 // [under fire, hit]: within the first range the plane is under fire only, within the second it is hit as well.
 type Band = [Range, Range]
 
 // Tables 9 and 10: [altitude 1-3, 4, 5][distance 0-4, 5-6, 7-8]
 const HEAVY_TABLE: Band[][] = [
-  [[R(8, 9), R(10, 12)], [R(8, 9), R(10, 12)], [R(8, 9), R(10, 11)]],
-  [[R(8, 9), R(10, 12)], [R(8, 9), R(10, 11)], [R(8, 9), R(11, 12)]],
-  [[R(9, 10), R(11, 12)], [R(9, 10), R(11)], [R(8, 9), R(12)]],
+  [[rolls(8, 9), rolls(10, 12)], [rolls(8, 9), rolls(10, 12)], [rolls(8, 9), rolls(10, 11)]],
+  [[rolls(8, 9), rolls(10, 12)], [rolls(8, 9), rolls(10, 11)], [rolls(8, 9), rolls(11, 12)]],
+  [[rolls(9, 10), rolls(11, 12)], [rolls(9, 10), rolls(11)], [rolls(8, 9), rolls(12)]],
 ]
 const LIGHT_TABLE: Band[][] = [
-  [[R(7, 8), R(9, 12)], [R(7, 8), R(9, 12)], [R(8, 9), R(10, 12)]],
-  [[R(8, 9), R(10, 12)], [R(8, 9), R(10, 12)], [R(8, 9), R(10, 11)]],
-  [[R(9, 10), R(11, 12)], [R(9, 10), R(11)], [R(10, 11), R(12)]],
+  [[rolls(7, 8), rolls(9, 12)], [rolls(7, 8), rolls(9, 12)], [rolls(8, 9), rolls(10, 12)]],
+  [[rolls(8, 9), rolls(10, 12)], [rolls(8, 9), rolls(10, 12)], [rolls(8, 9), rolls(10, 11)]],
+  [[rolls(9, 10), rolls(11, 12)], [rolls(9, 10), rolls(11)], [rolls(10, 11), rolls(12)]],
 ]
 
 // 6.0.1, 6.0.2

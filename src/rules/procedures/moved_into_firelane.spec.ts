@@ -33,6 +33,12 @@ function setup(niem: PlaneInstance[], bryt: PlaneInstance[], active = R_Jap) {
 // Each die is rolled as random(6) + 1
 const roll = (...values: number[]) => dice = values.map(it => it - 1);
 
+// Every plane of the moving side has moved (4.0), so that the movement phase can end.
+function endMoving() {
+  G.moved = G.board.planes[G.active].map(it => it.id);
+  movePlanes.done();
+}
+
 beforeEach(() => {
   goto.mockClear();
   stubFramework({goto, random: () => dice.shift()});
@@ -41,27 +47,27 @@ beforeEach(() => {
 describe('moving into a fire line', () => {
   it('gives the enemy the first shot', () => {
     setup([he111()], [spit()], R_Amer);
-    movePlanes.done();
+    endMoving();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledWith("moved_into_firelane");
   });
 
   it('does not react when the fire line is blocked by a friendly plane (5.3.2)', () => {
     setup([he111({at: "A20.B22"})], [spit(), spit({id: "1.1", at: "A20.B21", direction: 3})], R_Amer);
-    movePlanes.done();
+    endMoving();
     expect(goto).not.toHaveBeenCalledWith("moved_into_firelane");
   });
 
   it('jammed planes cannot react, but get to clear their guns (5.3.4)', () => {
     setup([he111({jammed: true})], [spit({jammed: true})], R_Amer);
-    movePlanes.done();
+    endMoving();
     expect(goto).toHaveBeenCalledWith("combat");
     expect(G.active).toBe(R_Amer);
   });
 
   it('goes straight to the next move phase when nobody can act', () => {
     setup([he111({at: "A30.B30"})], [spit()], R_Amer);
-    movePlanes.done();
+    endMoving();
     expect(goto).toHaveBeenCalledWith("move_planes");
     expect(G.active).toBe(R_Jap);
   });
@@ -92,7 +98,7 @@ describe('reaction fire', () => {
     expect(goto).toHaveBeenLastCalledWith("move_planes");
     expect(G.shot).toEqual([]);
     goto.mockClear();
-    movePlanes.done();
+    endMoving();
     expect(goto).toHaveBeenCalledWith("combat");
     expect(G.active).toBe(R_Jap);
   });

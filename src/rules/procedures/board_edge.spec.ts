@@ -47,6 +47,12 @@ function buttons(state: { prompt(): void }) {
   return button.mock.calls.filter(([, enabled]) => enabled !== false).map(([name]) => name);
 }
 
+// Every plane of the moving side has moved (4.0), so that the movement phase can end.
+function endMoving() {
+  G.moved = G.board.planes[G.active].map(it => it.id);
+  movePlanes.done();
+}
+
 beforeEach(() => {
   goto.mockClear();
   stubFramework({goto, random: () => dice.shift()});
@@ -226,7 +232,7 @@ describe('no own plane on the board', () => {
     setup([he], []);
     G.off_board = [offBoard("1.0", 8)];
     G.aa_guns = [{hex: "A20.B20", side: R_Jap, heavy: true}];
-    movePlanes.done();
+    endMoving();
     expect(G.active).toBe(R_Jap);
     expect(goto).toHaveBeenCalledTimes(1);
     expect(goto).toHaveBeenCalledWith("anti_aircraft");
@@ -335,7 +341,7 @@ describe('undo after the movement phase', () => {
     const me = plane("0.0", "F4F");
     setup([me], [plane("1.0", "A6M6", {at: "A20.B21"})]);
     G.moved = [me.id];
-    movePlanes.done();
+    endMoving();
     expect(pushUndo).toHaveBeenCalledTimes(1);
     expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("combat");
@@ -378,4 +384,15 @@ describe('9: the exits of the scenario', () => {
     leaving(R_Amer, "6. Operacja I");
     expect(G.leaving_from).toBe("A20.B11");
   });
+});
+
+it('the movement phase ends only once every plane has moved (4.0)', () => {
+  const moved = plane("0.0", "F4F", {at: "A20.B20"});
+  setup([moved, plane("0.1", "F4F", {at: "A30.B30"})], [plane("1.0", "A6M", {at: "A40.B40"})]);
+  G.moved = ["0.0"];
+  expect(buttons(movePlanes)).not.toContain("done");
+  movePlanes.done();
+  expect(goto).not.toHaveBeenCalled();
+  G.moved = ["0.0", "0.1"];
+  expect(buttons(movePlanes)).toContain("done");
 });

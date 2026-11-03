@@ -1,4 +1,4 @@
-import {G, ROLES, V} from "../globals.js"
+import {G, ROLES} from "../globals.js"
 import {Edge, exitsFor, flightsFor, possibleMovesFor} from "../game/hex.js"
 import {SCENARIOS} from "../game/scenarios";
 import {ALTITUDE_ACTIONS, ALTITUDE_NAMES, altitudeHandlers, altitudeOf, canChangeAltitude} from "../game/altitude";
@@ -77,6 +77,11 @@ function hasMoved(plane: PlaneInstance): boolean {
   return set_has(G.moved ?? [], plane.id)
 }
 
+// 4.0: every plane has to move, at least by its minimum speed.
+function unmovedPlanes(): PlaneInstance[] {
+  return G.board.planes[G.active].filter(plane => !plane.destroyed && !hasMoved(plane))
+}
+
 function selectablePlanes(): PlaneInstance[] {
   return G.board.planes[G.active].filter(plane => !plane.destroyed && !hasMoved(plane))
 }
@@ -108,7 +113,7 @@ export const movePlanes = {
     } else {
       prompt(`faza ruchu samolotów ${ROLES[G.active]}`)
     }
-    button("done", (V!.unmoved ?? []).length === 0)
+    button("done", unmovedPlanes().length === 0)
     if (selected !== undefined) {
       for (const hex of possibleMovesFor(selected, G.board.planes, G.selected_altitude, isForced(selected))) {
         action("move_hex", hex)
@@ -120,6 +125,7 @@ export const movePlanes = {
   },
 
   done() {
+    if (unmovedPlanes().length > 0) return
     // Undo back into the movement phase stays possible until a die is rolled in combat
     // (the framework drops it anyway when the turn passes to the other side).
     push_undo()

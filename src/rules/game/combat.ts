@@ -5,18 +5,18 @@ import {cloudPenalty, isInCloud} from "./clouds.js"
 import {sunPenalty} from "./sun.js"
 
 type Range = [number, number] | null
-const R = (from: number, to = from): Range => [from, to]
+const rolls = (from: number, to = from): Range => [from, to]
 const NONE: Range[] = [null, null, null]
 
 // Table 1: [attack strength][distance - 1] = the rolls of 2d6 giving 1, 2 and 3 damage; null = none.
 // A roll of 2 or 12 always jams the guns instead (5.3.4).
 export const COMBAT_TABLE: Range[][][] = [
   [NONE, NONE, NONE, NONE, NONE],
-  [[R(9, 10), R(11), null], [R(10, 11), null, null], [R(11), null, null], NONE, NONE],
-  [[R(8, 9), R(10, 11), null], [R(9, 10), R(11), null], [R(10, 11), null, null], [R(11), null, null], NONE],
-  [[R(7, 8), R(9, 10), R(11)], [R(8, 9), R(10, 11), null], [R(9, 10), R(11), null], [R(10, 11), null, null], [R(11), null, null]],
-  [[R(6, 7), R(8, 9), R(10, 11)], [R(7, 8), R(9, 10), R(11)], [R(8, 9), R(10, 11), null], [R(9, 10), R(11), null], [R(10, 11), null, null]],
-  [[R(5, 6), R(7, 8), R(9, 11)], [R(6, 7), R(8, 9), R(10, 11)], [R(7, 8), R(9, 10), R(11)], [R(8, 9), R(10, 11), null], [R(9, 10), R(11), null]],
+  [[rolls(9, 10), rolls(11), null], [rolls(10, 11), null, null], [rolls(11), null, null], NONE, NONE],
+  [[rolls(8, 9), rolls(10, 11), null], [rolls(9, 10), rolls(11), null], [rolls(10, 11), null, null], [rolls(11), null, null], NONE],
+  [[rolls(7, 8), rolls(9, 10), rolls(11)], [rolls(8, 9), rolls(10, 11), null], [rolls(9, 10), rolls(11), null], [rolls(10, 11), null, null], [rolls(11), null, null]],
+  [[rolls(6, 7), rolls(8, 9), rolls(10, 11)], [rolls(7, 8), rolls(9, 10), rolls(11)], [rolls(8, 9), rolls(10, 11), null], [rolls(9, 10), rolls(11), null], [rolls(10, 11), null, null]],
+  [[rolls(5, 6), rolls(7, 8), rolls(9, 11)], [rolls(6, 7), rolls(8, 9), rolls(10, 11)], [rolls(7, 8), rolls(9, 10), rolls(11)], [rolls(8, 9), rolls(10, 11), null], [rolls(9, 10), rolls(11), null]],
 ]
 
 const FIRE_RANGE = 5
@@ -160,9 +160,9 @@ export function describeShot(attackerPlane: PlaneInstance, target: FireTarget): 
   const applied = modifiers.filter(([, value]) => value > 0).map(([name, value]) => `${name} −${value}`)
   const strength = [`SA ${rear ? "do tyłu " : ""}${base}${attackerPlane.damaged ? " (uszkodzony)" : ""}`, ...applied].join(", ")
   const total = applied.length > 0 ? ` = SA ${atk}` : ""
-  const rolls = cell(atk, distance).map((range, i) => range && `${range[0] === range[1] ? range[0] : `${range[0]}–${range[1]}`}: ${i + 1}`)
+  const damageRolls = cell(atk, distance).map((range, i) => range && `${range[0] === range[1] ? range[0] : `${range[0]}–${range[1]}`}: ${i + 1}`)
     .filter(it => it).join(", ")
-  return `${targetPlane.plane.nazwa}, ${strength}${total}, odległość ${distance}: ${rolls ? `rzut ${rolls} uszk.` : "bez szans"} – trafienie ${percent(hitChance(atk, distance))}, zacięcie ${percent(waysToRoll(isJam) / 36)}`
+  return `${targetPlane.plane.nazwa}, ${strength}${total}, odległość ${distance}: ${damageRolls ? `rzut ${damageRolls} uszk.` : "bez szans"} – trafienie ${percent(hitChance(atk, distance))}, zacięcie ${percent(waysToRoll(isJam) / 36)}`
 }
 
 // 2.2: the counter turns over once the damage reaches half the endurance; the plane is shot down when it uses all of it.

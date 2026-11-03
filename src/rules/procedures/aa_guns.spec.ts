@@ -60,6 +60,12 @@ function shoot(plane: PlaneInstance, value: number, gun = GUN) {
   antiAircraft.aa_fire(plane.id);
 }
 
+// Every plane of the moving side has moved (4.0), so that the movement phase can end.
+function endMoving() {
+  G.moved = G.board.planes[G.active].map(it => it.id);
+  movePlanes.done();
+}
+
 beforeEach(() => {
   goto.mockClear();
   stubFramework({goto, random: () => dice.shift()});
@@ -160,7 +166,7 @@ describe('firing (tables 9, 10)', () => {
 describe('firing (6.2)', () => {
   it('follows the American movement (phase 2)', () => {
     setup([he111()], [GUN], R_Amer);
-    movePlanes.done();
+    endMoving();
     expect(goto).toHaveBeenCalledWith("anti_aircraft");
     expect(G.active).toBe(R_Jap);
   });
@@ -169,7 +175,7 @@ describe('firing (6.2)', () => {
     setup([he111()], [GUN], R_Amer);
     // Facing south, from 2 hexes north of the target.
     G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A05.B07", direction: 3, altitude: ALT_VERY_LOW});
-    movePlanes.done();
+    endMoving();
     expect(goto).toHaveBeenLastCalledWith("anti_aircraft");
     antiAircraft.done();
     expect(goto).toHaveBeenLastCalledWith("moved_into_firelane");
@@ -179,7 +185,7 @@ describe('firing (6.2)', () => {
   it('has no guns to fire after the Japanese movement (phase 5)', () => {
     setup([he111()], [GUN], R_Jap);
     G.board.planes[R_Jap].push({id: "1.0", plane: planes.A6M6, at: "A40.B40", direction: 0});
-    movePlanes.done();
+    endMoving();
     expect(goto).not.toHaveBeenCalledWith("anti_aircraft");
   });
 
