@@ -67,7 +67,7 @@ describe('board limits', () => {
     const it = plane("0.0", "F4F", {at: EAST_EDGE, direction: EAST});
     const flights = flightsFor(it, {[R_Amer]: [it]});
     expect(Object.keys(flights).every(hex => parseInt(hex.slice(1)) <= 56)).toBe(true);
-    expect(exitsFor(it, {[R_Amer]: [it]})).toContainEqual({hex: EAST_EDGE, south: false});
+    expect(exitsFor(it, {[R_Amer]: [it]})).toContainEqual({hex: EAST_EDGE, edge: "E"});
   });
 
   it('knows the edge hexes', () => {
@@ -77,40 +77,16 @@ describe('board limits', () => {
 });
 
 describe('4.3: leaving the board', () => {
-  it('British: no die, comes back in 5 stages', () => {
+  it('no die, comes back in 5 stages (4.3)', () => {
     const it = plane("1.0", "A6M6", {at: EAST_EDGE, direction: EAST});
     setup([], [it], R_Jap);
     leave(it, EAST_EDGE);
+    movePlanes.leave_return();
     expect(G.board.planes[R_Jap]).toEqual([]);
     expect(G.off_board).toEqual([{plane: it, return_stage: 8, from: EAST_EDGE}]);
   });
 
-  describe('German, not through the south edge (4.3.2)', () => {
-    it.each([
-      [1, false, "destroyed"],
-      [2, false, "damaged"],
-      [2, true, "destroyed"],
-      [3, false, "intact"],
-      [6, true, "damaged"],
-    ])('roll %i, damaged before: %s → %s', (value, damaged, outcome) => {
-      const it = plane("0.0", "F4F", {at: EAST_EDGE, direction: EAST, damaged});
-      setup([it], []);
-      roll(value);
-      leave(it, EAST_EDGE);
-      if (outcome === "destroyed") {
-        expect(it.destroyed).toBe(true);
-        expect(G.vp).toEqual({[R_Amer]: -1, [R_Jap]: 2});
-        expect(G.off_board).toEqual([]);
-      } else {
-        expect(it.destroyed).toBeUndefined();
-        expect(!!it.damaged).toBe(outcome === "damaged");
-        expect(G.off_board![0].return_stage).toBe(8);
-        expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
-      }
-    });
-  });
-
-  describe('German, through the south edge (8.1)', () => {
+  describe('through any edge: back in 5 stages or for good (4.3, 8.0.2)', () => {
     const south = () => {
       const it = plane("0.0", "SBD", {at: "A20.B11", direction: S});
       setup([it, plane("0.1", "SBD", {at: "A30.B30"})], [plane("1.0", "A6M6", {at: "A10.B20"})]);
@@ -122,17 +98,6 @@ describe('4.3: leaving the board', () => {
     it('rolls no die and asks about the return', () => {
       south();
       expect(buttons(movePlanes)).toEqual(["leave_return", "leave_forever"]);
-    });
-
-    it('may skip the exit hex when not coming back', () => {
-      const it = plane("0.0", "SBD", {at: "A20.B11", direction: S});
-      setup([it, plane("0.1", "SBD", {at: "A30.B30"})], [plane("1.0", "A6M6", {at: "A10.B20"})]);
-      G.selected_plane = it.id;
-      movePlanes.leave_board();
-      expect(buttons(movePlanes)).toEqual(["leave_forever"]);
-      movePlanes.leave_forever();
-      expect(it).toMatchObject({destroyed: true, left_board: true});
-      expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
     });
 
     it('may come back', () => {
@@ -163,6 +128,7 @@ describe('4.3: leaving the board', () => {
     const it = plane("1.0", "A6M6", {at: EAST_EDGE, direction: EAST});
     setup([plane("0.0", "SBD", {at: "A55.B40", direction: EAST})], [it], R_Jap);
     leave(it, EAST_EDGE);
+    movePlanes.leave_return();
     expect(fireTarget(G.board.planes[R_Amer][0], R_Amer)).toBeNull();
     G.board.planes[R_Jap] = [];
     expect(isGameOver()).toBe(false);

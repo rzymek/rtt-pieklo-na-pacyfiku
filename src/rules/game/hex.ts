@@ -32,17 +32,23 @@ function occupiedAt(allPlanes: Board['planes'], altitude: number): string[] {
     .map(p => p.at)
 }
 
-function crossesSouthEdge(hex: string, direction: number): boolean {
+// The map edges: west along column A01, east along A56, south and north along the ends of the columns.
+export type Edge = "W" | "E" | "S" | "N"
+
+// The edge a step off the board crosses.
+export function edgeCrossed(hex: string, direction: number): Edge {
   const [a, b] = parseHex(hex) as [number, number]
   const [da, db] = DIR_OFFSETS[direction]
-  const na = a + da
-  return na >= 1 && na <= 56 && b + db < bottomOf(na)
+  const na = a + da, nb = b + db
+  if (na < 1) return "W"
+  if (na > 56) return "E"
+  return nb < bottomOf(na) ? "S" : "N"
 }
 
 export interface Exit {
   // The last hex on the board.
   hex: string
-  south: boolean
+  edge: Edge
 }
 
 // 4.3.1, 8.1: the ways off the board. Crossing the edge takes one movement point, and counts as the hex required after a turn.
@@ -51,7 +57,7 @@ export function exitsFor(plane: PlaneInstance, allPlanes: Board['planes'], altit
   const maxSteps = maxSpeedAt(plane, altitude) - 1
   const turnDist = planeStats(plane).zwrotnosc
   const dir = plane.direction
-  const exits = new Map<string, boolean>()
+  const exits = new Map<string, Edge>()
   // The hexes passed, the starting one included.
   const walk = (from: string, direction: number, steps: number): string[] => {
     const hexes = [from]
@@ -66,7 +72,7 @@ export function exitsFor(plane: PlaneInstance, allPlanes: Board['planes'], altit
   const addExits = (hexes: string[], direction: number) => {
     for (const hex of hexes) {
       if (isOffBoardStep(hex, direction))
-        exits.set(hex, !!exits.get(hex) || crossesSouthEdge(hex, direction))
+        if (!exits.has(hex)) exits.set(hex, edgeCrossed(hex, direction))
     }
   }
   const straight = walk(plane.at, dir, maxSteps)
@@ -76,7 +82,7 @@ export function exitsFor(plane: PlaneInstance, allPlanes: Board['planes'], altit
     for (const turned of [(dir + 5) % 6, (dir + 1) % 6])
       addExits(walk(hex, turned, maxSteps - steps), turned)
   })
-  return [...exits].map(([hex, south]) => ({hex, south}))
+  return [...exits].map(([hex, edge]) => ({hex, edge}))
 }
 
 // Returns {hexId: flight} for all valid destinations.

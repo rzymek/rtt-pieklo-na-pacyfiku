@@ -74,7 +74,7 @@ export function fireGun(planeId: string) {
   delete G.selected_gun
   const hitFrom = aaHitFrom(gun, plane)!
   const roll = random(6) + 1
-  const result = roll >= hitFrom ? applyHit(plane) : 'pudło'
+  const result = roll >= hitFrom ? applyHit(plane, 1) : 'pudło'
   log(`Działko ${gun} ostrzeliwuje ${plane.plane.nazwa} [${ALTITUDE_NAMES[altitudeOf(plane)]}, odl:${hexDistance(gun, plane.at)}, rzut:${roll}] → ${result}`)
 }
 

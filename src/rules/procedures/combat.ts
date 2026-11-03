@@ -3,7 +3,7 @@ import {isEmpty} from "@rzymek/rally-the-troops-module/rules"
 import {describeShot, resolveShot} from "../game/combat.js"
 import {select_plane} from "./select_plane.js"
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide"
-import {canUnjam, fireTarget, markShot, shootersOf} from "./shooters"
+import {canUnjam, fireTarget, fireTargets, markShot, selectTarget, shootersOf} from "./shooters"
 import {endCombat} from "./phases"
 
 export const combat = {
@@ -24,7 +24,7 @@ export const combat = {
     button("done", true)
 
     myPlanes.forEach((plane) => {
-      if (canUnjam(plane) || fireTarget(plane, G.active as number))
+      if (canUnjam(plane) || fireTargets(plane, G.active as number).length > 0)
         action("select_plane", plane.id)
     })
 
@@ -34,13 +34,19 @@ export const combat = {
     } else if (plane) {
       const hit = fireTarget(plane, G.active as number)
       if (hit) {
-        prompt(`${initiative} – ${describeShot(plane, hit.plane, hit.distance)}`)
+        prompt(`${initiative} – ${describeShot(plane, hit)}`)
         button("attack", true)
+        const targets = fireTargets(plane, G.active as number)
+        if (targets.length > 1) targets.forEach(it => action("target", it.plane.id))
       }
     }
   },
 
   select_plane,
+
+  target(planeId: string) {
+    selectTarget(selectedPlaneOfTheActiveSide(), G.active as number, planeId)
+  },
 
   attack() {
     const plane = selectedPlaneOfTheActiveSide()
@@ -49,10 +55,10 @@ export const combat = {
 
     clear_undo()
     markShot(plane)
-    const targetPlane = G.board.planes[hit.side][hit.idx]
-    const {roll, atk, result} = resolveShot(plane, targetPlane!, hit.distance)
-    log(`${ROLES[G.active as number]} atakuje [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
+    const {roll, atk, result} = resolveShot(plane, hit)
+    log(`${ROLES[G.active as number]}: ${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""} [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
     delete G.selected_plane
+    delete G.selected_target
   },
 
   unjam() {

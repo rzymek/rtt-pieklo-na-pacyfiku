@@ -37,6 +37,14 @@ function bombsLeftDigit(plane: ViewPlaneInstance): string {
       text-anchor="middle" fill="${bombs > 0 ? '#147a14' : '#8a8a8a'}">${bombs}</text>`
 }
 
+// 2.2: the endurance left, where the counter number was printed.
+function enduranceLeft(plane: ViewPlaneInstance): string {
+  const left = plane.plane.wytrzymalosc - (plane.damage ?? 0)
+  const color = left < plane.plane.wytrzymalosc ? '#ff8080' : parseInt(plane.id) === 0 ? '#ffff00' : 'white'
+  return `<text x="77" y="12.5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="12"
+      text-anchor="end" fill="${color}">${left}</text>`
+}
+
 export function createPlaneCounter(plane: ViewPlaneInstance, center = getHexCenterInSVGCoords(plane.at)): SVGElement {
   const imgSrc = `./${plane.plane.img}${plane.damaged ? '_' : ''}.jpg`
   const imgW = parseFloat(planePlaceholder!.getAttribute('width')!)
@@ -57,7 +65,7 @@ export function createPlaneCounter(plane: ViewPlaneInstance, center = getHexCent
   const overlays = document.createElementNS(svgNS, 'g')
   overlays.setAttribute('transform', `${rotation} translate(${center.x - imgW / 2}, ${center.y - imgH / 2}) scale(${imgW / ART_SIZE})`)
   overlays.style.pointerEvents = 'none'
-  overlays.innerHTML = altitudeTab(plane.altitude ?? 5) + bombsLeftDigit(plane)
+  overlays.innerHTML = altitudeTab(plane.altitude ?? 5) + bombsLeftDigit(plane) + enduranceLeft(plane)
   group.appendChild(overlays)
 
   if (plane.jammed) {

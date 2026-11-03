@@ -57,14 +57,14 @@ describe('attack strength (5.0.2)', () => {
 
   it('changes the outcome of the roll', () => {
     roll(3, 4); // Spit atk 4, distance 1: 7-11, atk 2: 9-11
-    expect(rollShot(spit(CLEAR), he111(CLEAR), 1).hit).toBe(true);
+    expect(rollShot(spit(CLEAR), he111(CLEAR), 1).damage > 0).toBe(true);
     roll(3, 4);
-    expect(rollShot(spit(CLEAR), he111(CLOUD), 1).hit).toBe(false);
+    expect(rollShot(spit(CLEAR), he111(CLOUD), 1).damage > 0).toBe(false);
   });
 
   it('an attack strength of 0 never hits, but the guns can still jam', () => {
     roll(5, 5);
-    expect(rollShot(spit(CLOUD), he111(CLOUD), 1).hit).toBe(false);
+    expect(rollShot(spit(CLOUD), he111(CLOUD), 1).damage > 0).toBe(false);
     roll(6, 6);
     const attacker = spit(CLOUD);
     rollShot(attacker, he111(CLOUD), 1);

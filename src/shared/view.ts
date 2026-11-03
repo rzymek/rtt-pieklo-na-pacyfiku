@@ -3,10 +3,11 @@ import type {SunEdge} from "../rules/game/sun";
 
 export interface ViewPlaneInstance {
   id: string;
-  plane: { img: string, udzwig_bomb: number | null }
+  plane: { img: string, udzwig_bomb: number | null, wytrzymalosc: number }
   at: string
   direction: number
   altitude?: number
+  damage?: number
   damaged?: boolean
   destroyed?: boolean
   left_board?: boolean
@@ -36,6 +37,7 @@ export interface ViewActions {
   turn_right?: number
   select_gun?: string[]
   aa_fire?: string[]
+  target?: string[]
   deselect?: number
   leave_board?: number
   undo?: number

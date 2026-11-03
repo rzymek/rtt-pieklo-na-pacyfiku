@@ -1,11 +1,11 @@
 import type {PlaneInstance} from "../types";
 import {G, L, ROLES} from "../globals";
-import {applyHit, describeShot, resolveShot, rollShot} from "../game/combat";
+import {applyHit, applyShot, describeShot, resolveShot, rollShot} from "../game/combat";
 import {changeSide} from "../lifecycle/changeSide";
 import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {select_plane} from "./select_plane";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
-import {fireTarget, markShot, shootersOf} from "./shooters";
+import {fireTarget, fireTargets, markShot, selectTarget, shootersOf} from "./shooters";
 import {startCombat} from "./phases";
 
 function endReaction() {
@@ -16,6 +16,7 @@ function endReaction() {
 
 function afterShot() {
   delete G.selected_plane
+  delete G.selected_target
   clear_undo()
   if (isEmpty(shootersOf(G.active))) endReaction()
 }
@@ -33,30 +34,37 @@ export const movedIntoFirelane = {
     const selected = selectedPlaneOfTheActiveSide()
     const hit = selected && fireTarget(selected, G.active)
     const title = `krzyżowanie się linii ognia – ostrzał ${ROLES[G.active]}`
-    prompt(hit ? `${title} – ${describeShot(selected, hit.plane, hit.distance)}` : title)
+    prompt(hit ? `${title} – ${describeShot(selected, hit)}` : title)
     button("attack", !!hit)
+    const targets = selected ? fireTargets(selected, G.active) : []
+    if (targets.length > 1) targets.forEach(it => action("target", it.plane.id))
     button("done")
   },
 
   select_plane,
+
+  target(planeId: string) {
+    selectTarget(selectedPlaneOfTheActiveSide(), G.active, planeId)
+  },
 
   attack() {
     const plane = selectedPlaneOfTheActiveSide()
     const hit = plane && fireTarget(plane, G.active)
     if (!plane || !hit) return
     markShot(plane)
-    const shot = rollShot(plane, hit.plane, hit.distance)
-    log(`${ROLES[G.active]} atakuje poza swoją fazą [SA:${shot.atk} odl:${hit.distance} rzut:${shot.roll}] → ${shot.result}`)
-    if (!shot.hit) return afterShot()
-    if (fireTarget(hit.plane, hit.side)?.plane.id === plane.id) {
+    const shot = rollShot(plane, hit.plane, hit.distance, hit.rear)
+    log(`${ROLES[G.active]}: ${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""} poza swoją fazą [SA:${shot.atk} odl:${hit.distance} rzut:${shot.roll}] → ${shot.result}`)
+    if (shot.damage === 0) return afterShot()
+    if (fireTargets(hit.plane, hit.side).some(it => it.plane.id === plane.id)) {
       // Coinciding fire lines: the target shoots back before this hit takes effect.
       delete G.selected_plane
+      delete G.selected_target
       changeSide()
       G.selected_plane = hit.plane.id
       clear_undo()
-      return goto("return_fire", {shooter: plane.id, target: hit.plane.id})
+      return goto("return_fire", {shooter: plane.id, target: hit.plane.id, damage: shot.damage, downed: shot.downed})
     }
-    log(`${ROLES[hit.side]}: ${applyHit(hit.plane)}`)
+    log(`${hit.plane.plane.nazwa}: ${applyShot(hit.plane, shot)}`)
     afterShot()
   },
 
@@ -67,10 +75,15 @@ export const movedIntoFirelane = {
 
 function endReturnFire() {
   const target = planeById(L.target)
-  log(`${ROLES[G.active]}: ${applyHit(target)}`)
+  log(`${target.plane.nazwa}: ${applyHit(target, L.damage as number, L.downed as boolean)}`)
   changeSide()
   goto("moved_into_firelane")
   afterShot()
+}
+
+// 5.4: the hit plane fires back at its attacker.
+function returnFireTarget(plane: PlaneInstance) {
+  return fireTargets(plane, G.active).find(it => it.plane.id === L.shooter)
 }
 
 export const returnFire = {
@@ -78,20 +91,20 @@ export const returnFire = {
 
   prompt() {
     const plane = planeById(L.target)
-    const hit = fireTarget(plane, G.active)
+    const hit = returnFireTarget(plane)
     const title = `Samolot ${ROLES[G.active]} został trafiony – może jeszcze odpowiedzieć ogniem`
-    prompt(hit ? `${title} – ${describeShot(plane, hit.plane, hit.distance)}` : title)
+    prompt(hit ? `${title} – ${describeShot(plane, hit)}` : title)
     button("attack")
     button("done")
   },
 
   attack() {
     const plane = planeById(L.target)
-    const hit = fireTarget(plane, G.active)
+    const hit = returnFireTarget(plane)
     if (hit) {
       markShot(plane)
-      const {roll, atk, result} = resolveShot(plane, hit.plane, hit.distance)
-      log(`${ROLES[G.active]} odpowiada ogniem [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
+      const {roll, atk, result} = resolveShot(plane, hit)
+      log(`${ROLES[G.active]}: ${plane.plane.nazwa} odpowiada ogniem${hit.rear ? " do tyłu" : ""} [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
     }
     endReturnFire()
   },

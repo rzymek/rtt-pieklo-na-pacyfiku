@@ -40,12 +40,12 @@ describe('table 1', () => {
     ["0.0", "B25", {[R_Amer]: -2, [R_Jap]: 4}],
     ["0.0", "F4F", {[R_Amer]: -1, [R_Jap]: 2}],
   ] as const)('losing plane %s %s', (id, type, expected) => {
-    applyHit(plane(id, type, {damaged: true}));
+    applyHit(plane(id, type), 99);
     expect(G.vp).toEqual(expected);
   });
 
   it('a damaged plane scores nothing', () => {
-    applyHit(plane("1.0", "A6M6"));
+    applyHit(plane("1.0", "A6M6"), 1);
     expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
   });
 
@@ -65,7 +65,7 @@ describe('table 1', () => {
   });
 
   it('the score can go below zero (8.0)', () => {
-    applyHit(plane("0.0", "SBD", {damaged: true}));
+    applyHit(plane("0.0", "SBD"), 99);
     expect(G.vp![R_Amer]).toBe(-2);
   });
 });
@@ -179,9 +179,9 @@ describe('8.2: the winner', () => {
   });
 });
 
-describe('8.1: leaving through the south edge', () => {
+describe('4.3: leaving through the south edge', () => {
   const S = 3, NE = 1, N = 0;
-  const canLeaveSouth = (it: PlaneInstance, all = {[R_Amer]: [it]}) => exitsFor(it, all).some(exit => exit.south);
+  const canLeaveSouth = (it: PlaneInstance, all = {[R_Amer]: [it]}) => exitsFor(it, all).some(exit => exit.edge === "S");
   const canLeave = (it: PlaneInstance) => canLeaveSouth(it);
 
   it('straight ahead, from the edge', () => {

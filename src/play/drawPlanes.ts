@@ -63,8 +63,8 @@ export function drawPlanes() {
     .flatMap(([roleStr, rolePlanes]) => rolePlanes
       .filter(plane => plane && !plane.destroyed && document.getElementById(plane.at))
       .map(plane => ({plane, isActiveSide: parseInt(roleStr) === view.active_side})))
-    // Higher value = flying lower, so the lowest planes are drawn first and end up covered.
-    .sort((a, b) => (b.plane.altitude ?? 0) - (a.plane.altitude ?? 0))
+    // The lowest planes are drawn first and end up covered.
+    .sort((a, b) => (a.plane.altitude ?? 5) - (b.plane.altitude ?? 5))
 
   const planesAt = (hex: string) => planes.map(it => it.plane).filter(plane => plane.at === hex)
 
@@ -98,8 +98,11 @@ export function drawPlanes() {
 
     const isSelectable = view.actions?.select_plane?.includes(plane.id)
     const isFireTarget = plane.id === view.fire_target
+    // 5.3.1: another plane on the fire lines, to pick as the target instead.
+    const isOtherTarget = !isFireTarget && !!view.actions?.target?.includes(plane.id)
     const isAaTarget = view.actions?.aa_fire?.includes(plane.id)
     if (isFireTarget || isAaTarget) addBorder(plane, 'orange')
+    else if (isOtherTarget) addBorder(plane, '#ffcc80')
     else if (isSelectable && plane.id !== view.selected_plane) addBorder(plane, 'red')
 
     if (!center && HEX_ACTIONS.some(it => view.actions?.[it]?.includes(plane.at))) {
@@ -118,6 +121,13 @@ export function drawPlanes() {
         e.stopPropagation()
         expandedHex = undefined
         send_action("aa_fire", plane.id)
+      })
+    } else if (isOtherTarget) {
+      counter.style.cursor = 'pointer'
+      counter.addEventListener('click', e => {
+        e.stopPropagation()
+        expandedHex = undefined
+        send_action("target", plane.id)
       })
     } else if (isFireTarget) {
       counter.style.cursor = 'pointer'

@@ -8,6 +8,9 @@ export interface PlaneInstanceDef {
   at: string
   direction: number
   altitude?: number
+  // 2.2: the boxes crossed out on the plane card.
+  damage?: number
+  // 2.1.1, 2.2: turned over, at half the endurance.
   damaged?: boolean
   // Out of the game: shot down, or left the board for good.
   destroyed?: boolean
@@ -49,13 +52,14 @@ export interface GameState extends BaseGameState {
   reinforcements?: Record<number, Reinforcement[]>
   to_place?: Record<number, PlaneToPlace[]>
   off_board?: OffBoardPlane[]
-  // 8.1: choosing a way off the board; the hex once the player still has to decide about the return.
+  // 4.3, 8.0.2: choosing a way off the board; the hex once the player still has to decide about the return.
   leaving?: boolean
-  leaving_south_from?: string
+  leaving_from?: string
   targets?: string[]
   moved?: string[]
   selected_plane?: string
   selected_altitude?: number
+  selected_target?: string
   shot?: string[]
   // Ending the combat phase while some planes could still fire awaits confirmation.
   confirm_done?: boolean

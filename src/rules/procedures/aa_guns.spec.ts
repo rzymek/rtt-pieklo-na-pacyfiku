@@ -120,12 +120,12 @@ describe('firing table (table 4)', () => {
     const missed = he111({altitude, at});
     setup([missed]);
     shoot(missed, miss);
-    expect(missed.damaged).toBeUndefined();
+    expect(missed.damage).toBeUndefined();
 
     const target = he111({altitude, at});
     setup([target]);
     shoot(target, hit);
-    expect(target.damaged).toBe(true);
+    expect(target.damage).toBeGreaterThan(0);
   });
 
   it('cannot reach a high plane on an adjacent hex, nor anything further', () => {
@@ -138,8 +138,8 @@ describe('firing table (table 4)', () => {
     expect(actions(antiAircraft)).toEqual([]);
   });
 
-  it('destroys a plane that was already damaged (6.1)', () => {
-    const target = he111({damaged: true});
+  it('destroys a plane with too little endurance left (2.2)', () => {
+    const target = he111({damaged: true, damage: 5});
     setup([target]);
     shoot(target, 6);
     expect(target.destroyed).toBe(true);
@@ -208,7 +208,7 @@ describe('firing (6.2)', () => {
     setup([target], [GUN, ADJACENT]);
     shoot(target, 5);
     shoot(target, 6, ADJACENT);
-    expect(target.destroyed).toBe(true);
+    expect(target.damage).toBe(2);
   });
 
   it('can be declined (6.3.4)', () => {

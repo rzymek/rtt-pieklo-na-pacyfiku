@@ -41,10 +41,21 @@ function facesSun(hex: string, direction: number, edge: SunEdge): boolean {
 }
 
 // 5.0.1, 5.0.3
-export function sunPenalty(attacker: PlaneInstance, target: PlaneInstance): number {
+// The direction of the straight line from one hex to another, if they are on one.
+function lineDirection(from: string, to: string): number {
+  const [a1, b1] = parseHex(from) as [number, number]
+  const [a2, b2] = parseHex(to) as [number, number]
+  const da = a2 - a1, db = b2 - b1
+  const steps = Math.max(Math.abs(da), Math.abs(db), Math.abs(da - db))
+  return DIR_OFFSETS.findIndex(([x, y]) => x * steps === da && y * steps === db)
+}
+
+// 5.0.6: a rear shot follows its own fire line, not the plane's heading.
+export function sunPenalty(attacker: PlaneInstance, target: PlaneInstance, rear = false): number {
   const edge = G?.sun
   if (!edge || cloudPenalty(target) > 0) return 0
-  return facesSun(attacker.at, attacker.direction, edge) ? 1 : 0
+  const direction = rear ? lineDirection(attacker.at, target.at) : attacker.direction
+  return direction >= 0 && facesSun(attacker.at, direction, edge) ? 1 : 0
 }
 
 // 6.2.5: seen from the gun, the plane is against the sun. A plane right above the gun has no direction.

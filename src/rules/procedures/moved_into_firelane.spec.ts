@@ -16,8 +16,9 @@ vi.mock("../globals", async importOriginal => ({
 const goto = vi.fn((_name: string, env?: object) => Object.assign(L, env));
 let dice: number[];
 
+// A plane with no rear guns: fire lines cross only when it faces the other plane.
 function he111(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
-  return {id: "0.0", plane: planes.SBD, at: "A20.B21", direction: 0, ...overrides}
+  return {id: "0.0", plane: planes.F4F, at: "A20.B21", direction: 0, ...overrides}
 }
 
 function spit(overrides: Partial<PlaneInstance> = {}): PlaneInstance {
@@ -74,9 +75,9 @@ describe('reaction fire', () => {
     const target = he111();
     setup([target], [spit(), ahead]);
     G.selected_plane = "1.0";
-    roll(3, 5); // Spit atk 4, distance 1: 7-11
+    roll(3, 5); // Zero atk 4, distance 1: 8-9 gives 2 damage
     movedIntoFirelane.attack();
-    expect(target.damaged).toBe(true);
+    expect(target.damage).toBe(2);
     expect(G.shot).toEqual(["1.0"]);
     expect(G.active).toBe(R_Amer);
     expect(goto).toHaveBeenCalledWith("combat");
@@ -100,9 +101,9 @@ describe('reaction fire', () => {
     const target = he111();
     setup([target], [spit({damaged: true})]);
     G.selected_plane = "1.0";
-    roll(3, 3); // reduced Spit atk 3, distance 1: 7-11
+    roll(3, 3); // reduced Zero atk 3, distance 1: from 7
     movedIntoFirelane.attack();
-    expect(target.damaged).toBeUndefined();
+    expect(target.damage).toBeUndefined();
   });
 
   it('works in a game saved without the list of planes that fired', () => {
@@ -143,11 +144,12 @@ describe('combat phase', () => {
 
 describe('coinciding fire lines', () => {
   function mutual() {
-    const a = he111({direction: 3, damaged: true});
-    const b = spit({damaged: true});
+    // One more point of damage shoots either down.
+    const a = he111({direction: 3, damaged: true, damage: 5});
+    const b = spit({damaged: true, damage: 5});
     setup([a], [b]);
     G.selected_plane = "1.0";
-    roll(4, 4); // reduced Spit atk 3, distance 1: 8-11
+    roll(4, 4); // reduced Zero atk 3, distance 1: 7-8 gives 1 damage
     movedIntoFirelane.attack();
     return {a, b};
   }
@@ -156,12 +158,12 @@ describe('coinciding fire lines', () => {
     const {a} = mutual();
     expect(a.destroyed).toBeUndefined();
     expect(G.active).toBe(R_Amer);
-    expect(goto).toHaveBeenCalledWith("return_fire", {shooter: "1.0", target: "0.0"});
+    expect(goto).toHaveBeenCalledWith("return_fire", {shooter: "1.0", target: "0.0", damage: 1, downed: false});
   });
 
   it('both planes can go down', () => {
     const {a, b} = mutual();
-    roll(5, 5); // reduced He 111 atk 1, distance 1: 10-11
+    roll(5, 5); // reduced Wildcat atk 3, distance 1: 9-10 gives 2 damage
     returnFire.attack();
     expect(a.destroyed).toBe(true);
     expect(b.destroyed).toBe(true);
@@ -170,7 +172,7 @@ describe('coinciding fire lines', () => {
   it('returning fire uses up the shot of that combat phase (5.3.1)', () => {
     setup([he111({direction: 3})], [spit()]);
     G.selected_plane = "1.0";
-    roll(4, 4); // Spit atk 4, distance 1: 7-11
+    roll(4, 4); // Zero atk 4, distance 1: from 6
     movedIntoFirelane.attack();
     roll(1, 2);
     returnFire.attack();
