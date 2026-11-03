@@ -36,7 +36,7 @@ export function onUpdate() {
     ?.forEach(el => el?.classList.remove('action'))
 
   clearHexHighlights();
-  highlightHexes(view.actions?.move_hex, '#8080ff');
+  highlightHexes(view.actions?.move_hex, '#00ffff');
   highlightHexes(view.fire_line, '#ff4444');
   highlightHexes(view.actions?.bomb, '#ff9900');
   highlightHexes(view.actions?.torpedo, '#ff9900');
