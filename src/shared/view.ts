@@ -61,7 +61,7 @@ export interface View extends BaseViewState<ViewActions> {
   bombed?: string[]
   targets?: string[]
   aa_guns?: { id: string, side: number, heavy: boolean, hexes: string[] }[]
-  ships?: { id: string, side: number, nazwa: string, hexes: string[], damage?: number, sunk?: boolean, wytrzymalosc: number }[]
+  ships?: { id: string, side: number, type: string, nazwa: string, hexes: string[], damage?: number, sunk?: boolean, wytrzymalosc: number }[]
   aa_fired?: string[]
   selected_gun?: string
   sun?: SunEdge

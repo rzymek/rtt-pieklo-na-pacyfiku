@@ -38,9 +38,9 @@ export function onInit() {
   svg.insertBefore(aaGunsLayer, document.getElementById('units'))
   hexOverlay.id = 'hex-overlay'
   svg.insertBefore(hexOverlay, document.getElementById('units'))
-  // Above the planes: a gun under a counter must stay clickable.
+  // Under the planes like the other guns: the part sticking out from under a counter stays clickable.
   clickableAaGunsLayer.id = 'clickable-aa-guns'
-  svg.appendChild(clickableAaGunsLayer)
+  svg.insertBefore(clickableAaGunsLayer, document.getElementById('units'))
   expandedStackLayer.id = 'expanded-stack'
   svg.appendChild(expandedStackLayer)
 
