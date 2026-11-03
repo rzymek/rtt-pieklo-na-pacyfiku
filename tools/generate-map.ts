@@ -19,7 +19,7 @@ const A1_B1 = {x: 481, y: 4043};
 // Between columns (A); between hexes of a column (B).
 const DX = (5541 - 481) / 55;
 const DY = (3990 - 172) / 36;
-// SVG units per scan pixel: the same hex size as in Lew Morski, which the counters are drawn for.
+// SVG units per scan pixel: the hex size the counters are drawn for, as in the module this one started from.
 const SCALE = 24.068 / DX;
 // The background is twice the SVG size: enough for zooming in.
 const BACKGROUND_WIDTH = 2885;

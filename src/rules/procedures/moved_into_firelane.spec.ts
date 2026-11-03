@@ -68,7 +68,7 @@ describe('moving into a fire line', () => {
 });
 
 describe('reaction fire', () => {
-  // Gives the He 111 a target of its own, so that its side has a combat phase.
+  // Gives the Wildcat a target of its own, so that its side has a combat phase.
   const ahead = spit({id: "1.1", at: "A20.B24"});
 
   it('applies the hit before the moving side attacks and passes the turn back', () => {

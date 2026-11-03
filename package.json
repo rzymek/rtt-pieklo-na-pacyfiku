@@ -14,13 +14,11 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "@xmldom/xmldom": "^0.9.12",
     "npm-run-all2": "^9.0.4",
     "oxlint": "^1.90.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
-    "vitest": "^5.0.5",
-    "xpath": "^0.0.36"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@rzymek/rally-the-troops-module": "^0.1.0"

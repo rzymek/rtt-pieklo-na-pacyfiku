@@ -41,7 +41,7 @@ it('enters on its stage, in the movement phase of its side, next to an occupied 
   expect(entered[1].at).not.toBe("A01.B09");
 });
 
-it('the stage ends after the combat phase of the British', () => {
+it('the stage ends after the combat phase of the Japanese', () => {
   G.active = R_Jap;
   endCombat();
 

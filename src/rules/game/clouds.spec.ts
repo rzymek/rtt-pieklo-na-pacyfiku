@@ -56,7 +56,7 @@ describe('attack strength (5.0.2)', () => {
   });
 
   it('changes the outcome of the roll', () => {
-    roll(3, 4); // Spit atk 4, distance 1: 7-11, atk 2: 9-11
+    roll(3, 4); // Zero atk 4, distance 1: from 6; atk 2: from 8
     expect(rollShot(spit(CLEAR), he111(CLEAR), 1).damage > 0).toBe(true);
     roll(3, 4);
     expect(rollShot(spit(CLEAR), he111(CLOUD), 1).damage > 0).toBe(false);

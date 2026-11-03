@@ -42,8 +42,8 @@ function setAltitude(altitude: number) {
   else plane.altitude = altitude
 }
 
-// 9.3: the players set up their planes on the starting hexes, the British first:
-// the manual gives no order, and this way they cannot react to the German setup.
+// 9.0.2: the players set up their planes on the starting hexes, the Japanese first:
+// the manual gives no order; the Americans, who move first (3.0), set up last.
 export const placePlanes = {
   inactive: "rozstawianie samolotów",
 

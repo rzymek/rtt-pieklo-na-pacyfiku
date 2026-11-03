@@ -15,9 +15,6 @@ importers:
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
-      '@xmldom/xmldom':
-        specifier: ^0.9.12
-        version: 0.9.12
       npm-run-all2:
         specifier: ^9.0.4
         version: 9.0.4
@@ -33,9 +30,6 @@ importers:
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@26.6.6)(vite@8.3.5(@types/node@26.6.6))
-      xpath:
-        specifier: ^0.0.36
-        version: 0.0.36
 
 packages:
 
@@ -593,10 +587,6 @@ packages:
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
 
-  '@xmldom/xmldom@0.9.12':
-    resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
-    engines: {node: '>=14.6'}
-
   ansi-styles@7.0.0:
     resolution: {integrity: sha512-kKvt3m4uwzqL0wlkPd09CmljPJGOZZ4D0fP65sqFSvPkMRKhNi+74MgIJ5QxE6SxqB4t4KyUFGg8+n5zjo6hew==}
     engines: {node: '>=22'}
@@ -951,10 +941,6 @@ packages:
     engines: {node: '>=20.11'}
     hasBin: true
 
-  xpath@0.0.36:
-    resolution: {integrity: sha512-HuqAnJx5YJoDeLub7hhcNoiRvnqqrgoSsI4kLrOtv6XkaUI0zY9ylL4+ULozB35JT1SVMfdexsMqRbTp7bkFGQ==}
-    engines: {node: '>=0.6.0'}
-
 snapshots:
 
   '@emnapi/runtime@1.11.3':
@@ -1277,8 +1263,6 @@ snapshots:
 
   '@vitest/spy@5.0.5': {}
 
-  '@xmldom/xmldom@0.9.12': {}
-
   ansi-styles@7.0.0: {}
 
   assertion-error@2.0.1: {}
@@ -1575,5 +1559,3 @@ snapshots:
       isexe: 4.0.0
 
   why-is-node-running@3.2.1: {}
-
-  xpath@0.0.36: {}

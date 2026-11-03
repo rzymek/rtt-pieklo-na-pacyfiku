@@ -244,7 +244,7 @@ describe('no own plane on the board', () => {
 });
 
 describe('4.2.6: no free way to fly', () => {
-  // A He-111 at max speed 4, min 3, turns after 2. Boxed in on all altitudes it can reach.
+  // A Dauntless at max speed 4, min 3, turns after 2. Boxed in on all altitudes it can reach.
   function boxed(extra: Partial<PlaneInstance> = {}) {
     const he = plane("0.0", "SBD", {at: "A20.B20", direction: N, damaged: true, ...extra});
     const blocker = (id: string, at: string, altitude: number) => plane(id, "A6M6", {at, altitude});
