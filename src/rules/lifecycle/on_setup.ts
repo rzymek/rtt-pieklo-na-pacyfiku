@@ -2,6 +2,7 @@ import {G, R_Amer, R_Jap} from "../globals.js"
 import type {PlaneToPlace} from "../types";
 import {Deployment, SCENARIOS} from "../game/scenarios";
 import {SUN_EDGE_NAMES, sunEdgeFor} from "../game/sun";
+import {SHIP_TYPES, shipHexes} from "../game/ships";
 
 export const scenarios = Object.keys(SCENARIOS)
 
@@ -28,7 +29,7 @@ export function on_setup(scenario: string, _options: unknown) {
   G.targets = targets
   G.moved = []
   G.shot = []
-  G.flown_over = {}
+  G.flights = {}
   G.bombed = []
   // 8.0
   G.vp = {[R_Amer]: 0, [R_Jap]: 0}
@@ -38,6 +39,11 @@ export function on_setup(scenario: string, _options: unknown) {
   G.sun = sunEdgeFor(random(6) + 1)
   log(`Słońce: ${SUN_EDGE_NAMES[G.sun]}`)
   G.aa_guns = []
+  G.ships = [R_Amer, R_Jap].flatMap(side => ((side === R_Jap ? japonczycy : amerykanie).ships ?? [])
+    .map(({type, nazwa, from, towards}, i) => ({
+      id: `${side}.s${i}`, side, type, nazwa: nazwa ?? SHIP_TYPES[type].nazwa,
+      hexes: shipHexes(from, towards, SHIP_TYPES[type].dlugosc),
+    })))
   G.aa_fired = []
   G.active = R_Jap
   const gunSide = [R_Jap, R_Amer].find(side => (side === R_Jap ? japonczycy : amerykanie).aa_guns)

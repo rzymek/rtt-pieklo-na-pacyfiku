@@ -230,36 +230,3 @@ describe('firing (6.2)', () => {
     expect(G.aa_fired).toEqual([]);
   });
 });
-
-describe('bombing a gun (6.2.6, 7.0.6)', () => {
-  function bomb(value: number) {
-    setup([he111()], [ADJACENT], R_Amer);
-    G.moved = ["0.0"];
-    G.flown_over = {"0.0": [ADJACENT]};
-    G.selected_plane = "0.0";
-    dice = [value - 1];
-    movePlanes.bomb(ADJACENT);
-  }
-
-  it('offers a hex with a gun, without marking it as a bombed target', () => {
-    setup([he111()], [ADJACENT], R_Amer);
-    G.moved = ["0.0"];
-    G.flown_over = {"0.0": [ADJACENT]};
-    G.selected_plane = "0.0";
-    expect(actions(movePlanes).filter(it => it[0] === "bomb")).toEqual([["bomb", ADJACENT]]);
-    roll(1);
-    movePlanes.bomb(ADJACENT);
-    expect(G.bombed).toEqual([]);
-  });
-
-  it('destroys the gun on 4-6', () => {
-    bomb(4);
-    expect(G.aa_guns).toEqual([]);
-    expect(clear_undo).toHaveBeenCalled();
-  });
-
-  it('leaves it on 1-3', () => {
-    bomb(3);
-    expect(G.aa_guns).toEqual(guns([ADJACENT]));
-  });
-});

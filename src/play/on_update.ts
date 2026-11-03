@@ -4,6 +4,7 @@ import {drawBombed} from "./drawBombed";
 import {drawTargets} from "./drawTargets";
 import {drawAaGuns} from "./drawAaGuns";
 import {drawSun} from "./drawSun";
+import {drawShips} from "./drawShips";
 import {drawReturnHexes} from "./drawReturnHexes";
 
 export function onUpdate() {
@@ -38,6 +39,7 @@ export function onUpdate() {
   highlightHexes(view.actions?.move_hex, '#8080ff');
   highlightHexes(view.fire_line, '#ff4444');
   highlightHexes(view.actions?.bomb, '#ff9900');
+  highlightHexes(view.actions?.torpedo, '#ff9900');
   highlightHexes(view.actions?.place_gun, '#ffff66');
   highlightHexes(view.actions?.place_plane, '#66ff66');
   highlightHexes(view.actions?.return_hex, '#66ff66');
@@ -60,6 +62,7 @@ export function onUpdate() {
     if (info) info.textContent = `Stracone samoloty: ${planes.filter(plane => plane.destroyed && !plane.left_board).length}`
   }
 
+  drawShips()
   drawSun()
   drawTargets()
   drawBombed()

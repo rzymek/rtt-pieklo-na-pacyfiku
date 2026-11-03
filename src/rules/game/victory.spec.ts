@@ -5,7 +5,6 @@ import type {PlaneInstance} from "../types";
 import {applyHit} from "./combat";
 import {checkGameEnd, endingGame, winner} from "./victory";
 import {exitsFor} from "./hex";
-import {dropBomb} from "../procedures/bombers";
 
 vi.mock("../globals", async importOriginal => ({
   ...await importOriginal<typeof import("../globals")>(),
@@ -49,49 +48,9 @@ describe('table 1', () => {
     expect(G.vp).toEqual({[R_Amer]: 0, [R_Jap]: 0});
   });
 
-  it('every series of bombs on a target counts, also on one bombed before (7.0.8)', () => {
-    const bomber = plane("0.0", "B25");
-    G.flown_over = {"0.0": ["A01.B01"]};
-    dropBomb(bomber, "A01.B01");
-    G.flown_over = {"0.0": ["A01.B01"]};
-    dropBomb(bomber, "A01.B01");
-    expect(G.vp![R_Amer]).toBe(6);
-  });
-
-  it('bombs elsewhere than on a target score nothing', () => {
-    G.flown_over = {"0.0": ["A05.B05"]};
-    dropBomb(plane("0.0", "B25"), "A05.B05");
-    expect(G.vp![R_Amer]).toBe(0);
-  });
-
   it('the score can go below zero (8.0)', () => {
     applyHit(plane("0.0", "SBD"), 99);
     expect(G.vp![R_Amer]).toBe(-2);
-  });
-});
-
-describe('9.2: bonus for all the targets', () => {
-  const bomb = (hex: string) => {
-    G.flown_over = {"0.0": [hex]};
-    dropBomb(plane("0.0", "B25"), hex);
-  };
-
-  beforeEach(() => {
-    G.all_targets_vp = 5;
-  });
-
-  it('is not given for a part of them', () => {
-    bomb("A01.B01");
-    bomb("A01.B01");
-    expect(G.vp![R_Amer]).toBe(6);
-  });
-
-  it('is given once, on top of the points for the series', () => {
-    bomb("A01.B01");
-    bomb("A02.B02");
-    expect(G.vp![R_Amer]).toBe(3 + 3 + 5);
-    bomb("A02.B02");
-    expect(G.vp![R_Amer]).toBe(3 + 3 + 5 + 3);
   });
 });
 

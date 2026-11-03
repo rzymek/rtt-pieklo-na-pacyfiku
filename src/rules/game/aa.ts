@@ -16,6 +16,8 @@ export interface LandGun {
 // A gun able to fire: on land, or on a ship (6.1.3), which fires from any of its hexes (6.1.4).
 export interface AaGun {
   id: string
+  // For the log: the hex of a land gun, the ship of a ship's one.
+  label: string
   side: number
   heavy: boolean
   hexes: string[]

@@ -16,8 +16,10 @@ export interface PlaneData extends PlaneReducedStats {
 	wytrzymalosc: number
 	// 7.1.2
 	nurkowy?: boolean
-	// 7.3
+	// 7.3: can carry a torpedo,
 	torpedowy?: boolean
+	// and does carry one in the scenario (9).
+	torpeda?: boolean
 	// Table 2: the counters in the box.
 	zetony: number
 	img: string

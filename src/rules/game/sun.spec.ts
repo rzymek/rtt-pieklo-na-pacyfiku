@@ -74,7 +74,7 @@ describe('firing into the sun (5.0.1)', () => {
 
 describe('AA guns (6.3.5)', () => {
   const low = (at: string): PlaneInstance => ({...spit(at, N), altitude: ALT_VERY_LOW});
-  const gun = (hex: string): AaGun => ({id: hex, side: 1, heavy: true, hexes: [hex]});
+  const gun = (hex: string): AaGun => ({id: hex, label: hex, side: 1, heavy: true, hexes: [hex]});
 
   it('subtract 2 for a plane against the sun', () => {
     G.sun = "W";

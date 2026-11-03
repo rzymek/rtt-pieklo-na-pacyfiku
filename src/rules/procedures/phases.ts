@@ -5,6 +5,7 @@ import {changeSide, otherSide} from "../lifecycle/changeSide";
 import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {canUnjam, shootersOf} from "./shooters";
 import {gunsReady} from "./aa_guns";
+import {canAttackGround} from "./bombers";
 import {nextToReturn} from "./return_planes";
 import {isGameOver} from "../game/victory";
 
@@ -30,7 +31,7 @@ export function endAntiAircraft() {
 
 export function startCombat() {
   const planes = G.board.planes[G.active]
-  if (planes.some(canUnjam) || !isEmpty(shootersOf(G.active))) {
+  if (planes.some(canUnjam) || planes.some(canAttackGround) || !isEmpty(shootersOf(G.active))) {
     goto("combat")
   } else {
     endCombat()
@@ -40,6 +41,9 @@ export function startCombat() {
 // 3.0: firing during the enemy's combat phase does not use up the shot in the plane's own phase.
 export function endCombat() {
   delete G.selected_plane
+  delete G.selected_target
+  G.flights = {}
+  G.bombed_now = {}
   delete G.selected_gun
   changeSide()
   if (G.active === R_Amer) {

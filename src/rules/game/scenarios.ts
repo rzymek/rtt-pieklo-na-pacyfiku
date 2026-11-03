@@ -1,6 +1,7 @@
 import {data, PlaneData} from "./data.js"
 import {hexesAround as hexesAroundOn, hexId} from "@rzymek/rally-the-troops-module/rules"
 import {isOnBoard} from "./hex.js"
+import type {ShipKey} from "./ships.js"
 
 const {A6M, F4F, B17, B25} = data.planes
 
@@ -23,8 +24,17 @@ export interface Reinforcement {
   direction: number
 }
 
+// 9: a ship from one hex towards another, as long as table 3 says.
+export interface ShipSetup {
+  type: ShipKey
+  nazwa?: string
+  from: string
+  towards: string
+}
+
 export interface Side {
   deployments: Deployment[]
+  ships?: ShipSetup[]
   // 6.1.1: land guns, set up anywhere on the island.
   aa_guns?: { count: number, heavy: boolean }
   reinforcements?: Reinforcement[]

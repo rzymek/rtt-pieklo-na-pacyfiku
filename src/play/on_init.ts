@@ -4,6 +4,7 @@ import {targetsLayer} from "./refs/targetsLayer";
 import {aaGunsLayer} from "./refs/aaGunsLayer";
 import {clickableAaGunsLayer} from "./refs/clickableAaGunsLayer";
 import {sunLayer} from "./refs/sunLayer";
+import {shipsLayer} from "./refs/shipsLayer";
 import {returnHexesLayer} from "./refs/returnHexesLayer";
 import {planePlaceholder} from "./refs/planePlaceholder";
 import {expandedStackLayer} from "./refs/expandedStackLayer";
@@ -23,6 +24,8 @@ export function onInit() {
   })
 
   const svg = document.querySelector('#mapwrap svg')!
+  shipsLayer.id = 'ships'
+  svg.insertBefore(shipsLayer, document.getElementById('units'))
   sunLayer.id = 'sun'
   svg.insertBefore(sunLayer, document.getElementById('units'))
   targetsLayer.id = 'targets'

@@ -1,5 +1,6 @@
 import type {PlaneInstance} from "../types";
 import {G, L, R_Jap, ROLES} from "../globals";
+import {shipGunCount, type Ship} from "../game/ships";
 import {AaGun, aaShot, canFireAt, canPlaceGun, describeAaShot, GUN_DESTROYED_FROM} from "../game/aa";
 import {ALTITUDE_NAMES, altitudeOf} from "../game/altitude";
 import {applyHit} from "../game/combat";
@@ -47,9 +48,20 @@ export const placeAaGuns = {
   },
 }
 
-// 6.1.1, 6.1.3: the land guns of the side.
+// 6.1.3: the guns of a ship, numbered heavy first: "<ship id>/C1", "<ship id>/L1".
+function shipGuns(ship: Ship): AaGun[] {
+  const {light, heavy} = shipGunCount(ship)
+  const guns = (count: number, isHeavy: boolean) => Array.from({length: count}, (_, i) =>
+    ({id: `${ship.id}/${isHeavy ? "C" : "L"}${i + 1}`, label: `${ship.nazwa} (${i + 1})`, side: ship.side, heavy: isHeavy, hexes: ship.hexes}))
+  return [...guns(heavy, true), ...guns(light, false)]
+}
+
+// 6.1.1, 6.1.3: the land guns and the ship guns of the side.
 export function gunsOf(side: number): AaGun[] {
-  return landGuns().filter(it => it.side === side).map(({hex, heavy}) => ({id: hex, side, heavy, hexes: [hex]}))
+  return [
+    ...landGuns().filter(it => it.side === side).map(({hex, heavy}) => ({id: hex, label: hex, side, heavy, hexes: [hex]})),
+    ...(G.ships ?? []).filter(ship => ship.side === side).flatMap(shipGuns),
+  ]
 }
 
 function gunById(id: string | undefined): AaGun | undefined {
@@ -89,7 +101,7 @@ export function fireGun(planeId: string) {
   const shot = aaShot(gun, plane, roll)
   if (shot.underFire) plane.under_fire = true
   const result = shot.damage > 0 ? `trafienie → ${applyHit(plane, shot.damage)}` : shot.underFire ? "pod ostrzałem" : "pudło"
-  log(`Działko ${caliber(gun.heavy)} ${gun.id} ostrzeliwuje ${description} [${ALTITUDE_NAMES[altitudeOf(plane)]}, rzut:${roll}] → ${result}`)
+  log(`Działko ${caliber(gun.heavy)} ${gun.label} ostrzeliwuje ${description} [${ALTITUDE_NAMES[altitudeOf(plane)]}, rzut:${roll}] → ${result}`)
 }
 
 // 3.0, phases 2 and 5: right after the enemy's movement, the guns fire at its planes.
@@ -100,7 +112,7 @@ export const antiAircraft = {
     const gun = gunById(G.selected_gun)
     const targets = gun ? aaTargets(gun) : []
     prompt(`Ostrzał przeciwlotniczy: ${ROLES[G.active]}${gun
-      ? ` – działko ${caliber(gun.heavy)} ${gun.id}, wybierz cel: ${targets.map(it => describeAaShot(gun, it)).join("; ")}`
+      ? ` – działko ${caliber(gun.heavy)} ${gun.label}, wybierz cel: ${targets.map(it => describeAaShot(gun, it)).join("; ")}`
       : " – wybierz działko"}`)
     gunsReady().forEach(it => action("select_gun", it.id))
     targets.forEach(target => action("aa_fire", target.id))

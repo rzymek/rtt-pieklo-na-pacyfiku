@@ -3,6 +3,7 @@ import type {PlaneData} from "./game/data.js"
 import type {Reinforcement} from "./game/scenarios.js"
 import type {SunEdge} from "./game/sun.js"
 import type {LandGun} from "./game/aa.js"
+import type {Ship} from "./game/ships.js"
 
 export interface PlaneInstanceDef {
   plane: PlaneData
@@ -45,6 +46,15 @@ export interface PlaneToPlace {
   direction: number
 }
 
+export interface StageFlight {
+  // The hexes entered.
+  path: string[]
+  from_altitude: number
+  altitude: number
+  // No turn.
+  straight: boolean
+}
+
 export interface Board {
   planes: Record<number, PlaneInstance[]>
 }
@@ -66,7 +76,11 @@ export interface GameState extends BaseGameState {
   shot?: string[]
   // Ending the combat phase while some planes could still fire awaits confirmation.
   confirm_done?: boolean
-  flown_over?: Record<string, string[]>
+  // 7.0.2, 7.1, 7.3.1: how each plane flew in this stage.
+  flights?: Record<string, StageFlight>
+  // 7.0.4: the hexes each plane bombed in this stage.
+  bombed_now?: Record<string, string[]>
+  ships?: Ship[]
   bombed?: string[]
   aa_guns?: LandGun[]
   aa_fired?: string[]

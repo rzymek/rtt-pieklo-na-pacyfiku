@@ -10,10 +10,15 @@ const MARKER_HEIGHT = MARKER_WIDTH * 77 / 88
 export function drawAaGuns() {
   aaGunsLayer.innerHTML = ""
   clickableAaGunsLayer.innerHTML = ""
+  // A ship's guns spread along its hexes, two to a hex.
+  const shared = new Map<string, number>()
   for (const {id, heavy, hexes} of view.aa_guns ?? []) {
-    const hex = hexes[0]
+    const key = hexes.join()
+    const index = shared.get(key) ?? 0
+    shared.set(key, index + 1)
+    const hex = hexes[Math.floor(index / 2) % hexes.length]
     const center = getHexCenterInSVGCoords(hex)
-    const x = center.x + 1, y = center.y + 1
+    const x = center.x + (index % 2 === 0 ? 1 : -1 - MARKER_WIDTH), y = center.y + 1
     const marker = document.createElementNS(svgNS, 'image')
     marker.setAttribute('href', './images/m_antia.png')
     marker.setAttribute('x', String(x))

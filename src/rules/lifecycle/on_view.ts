@@ -1,5 +1,6 @@
 import {G, L, R, R_Amer, R_Jap, V} from "../globals";
 import {gunsOf} from "../procedures/aa_guns";
+import {shipType} from "../game/ships";
 import {movesMapFor} from "../game/hex";
 import {fireLineHexes} from "../game/combat";
 import {selectedPlaneOfTheActiveSide} from "../procedures/selectedPlaneOfTheActiveSide";
@@ -21,6 +22,7 @@ export function on_view() {
   V.bombed = G.bombed
   V.targets = G.targets
   V.aa_guns = [...gunsOf(R_Amer), ...gunsOf(R_Jap)]
+  V.ships = (G.ships ?? []).map(ship => ({...ship, wytrzymalosc: shipType(ship).wytrzymalosc}))
   V.aa_fired = G.aa_fired
   V.selected_gun = G.selected_gun
   V.vp = G.vp

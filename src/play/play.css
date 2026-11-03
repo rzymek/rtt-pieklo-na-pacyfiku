@@ -7,7 +7,7 @@
 	cursor: pointer;
 }
 
-#markers, #targets, #bombed, #sun, #return-hexes {
+#markers, #targets, #bombed, #sun, #return-hexes, #ships {
 	pointer-events: none;
 }
 

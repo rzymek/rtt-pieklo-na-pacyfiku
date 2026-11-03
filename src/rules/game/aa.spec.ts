@@ -10,7 +10,7 @@ vi.mock("../globals", async importOriginal => ({
 }));
 
 const GUN = "A20.B20"
-const heavy: AaGun = {id: GUN, side: 1, heavy: true, hexes: [GUN]}
+const heavy: AaGun = {id: GUN, label: GUN, side: 1, heavy: true, hexes: [GUN]}
 const light: AaGun = {...heavy, heavy: false}
 
 function plane(at: string, altitude: number): PlaneInstance {
