@@ -17,7 +17,7 @@ concurrency:
 # 04-module-deploy-key.sh from the deploy-oracle repository.
 env:
   DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-  # Stands in for the server checkout: the build goes to $RTT_DIR/public/lew-morski.
+  # Stands in for the server checkout: the build goes to $RTT_DIR/public/pieklo-na-pacyfiku.
   # Outside the workspace, so lint and tsc never see the output.
   RTT_DIR: ${{ github.workspace }}/../rtt
 
@@ -53,7 +53,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           # The server ignores the command line: the key can only run rtt-deploy-module.
-          tar -czf - -C "$RTT_DIR/public/lew-morski" . | ssh -i ~/.ssh/deploy_key \
+          tar -czf - -C "$RTT_DIR/public/pieklo-na-pacyfiku" . | ssh -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
             "rtt-deploy@$DEPLOY_HOST"
 
