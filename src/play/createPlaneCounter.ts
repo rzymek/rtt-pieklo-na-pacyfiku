@@ -44,12 +44,15 @@ function underFire(plane: ViewPlaneInstance): string {
       <circle r="7" fill="white" fill-opacity=".8"/><circle r="4.5"/><circle r="2"/><path d="M-9 0h18M0 -9v18" stroke-width=".8"/></g>`
 }
 
-// 2.2: the endurance left, where the counter number was printed.
+// 2.2: the endurance left out of the initial one, where the counter number was printed.
+// On a dark plate, as it overlaps the end of the longer names.
 function enduranceLeft(plane: ViewPlaneInstance): string {
-  const left = plane.plane.wytrzymalosc - (plane.damage ?? 0)
-  const color = left < plane.plane.wytrzymalosc ? '#ff8080' : parseInt(plane.id) === 0 ? '#ffff00' : 'white'
-  return `<text x="77" y="12.5" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="12"
-      text-anchor="end" fill="${color}">${left}</text>`
+  const max = plane.plane.wytrzymalosc
+  const left = Math.max(0, max - (plane.damage ?? 0))
+  const color = left < max ? '#ff8080' : parseInt(plane.id) === 0 ? '#ffff00' : 'white'
+  return `<rect x="58" y="2.5" width="21" height="12" rx="2" fill="black" fill-opacity=".6"/>
+    <text x="68.5" y="12.3" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="11"
+      text-anchor="middle" fill="${color}">${left}/${max}</text>`
 }
 
 export function createPlaneCounter(plane: ViewPlaneInstance, center = getHexCenterInSVGCoords(plane.at)): SVGElement {
