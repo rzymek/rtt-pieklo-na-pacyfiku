@@ -21,32 +21,3 @@ body.hide-pieces #expanded-stack {
 	padding: 0 5px 3px;
 	font-size: 14px;
 }
-
-#plane_list {
-	padding: 0 8px 4px;
-	font-size: 13px;
-	border-bottom: 1px solid #0004;
-}
-
-.plane_list_header {
-	font-weight: bold;
-	margin-top: 4px;
-}
-
-.side_0 .plane_list_header { color: #1b2ab0; }
-.side_1 .plane_list_header { color: #b00000; }
-
-.plane_row {
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-	padding: 0 2px;
-}
-
-.plane_row:hover { background: #0001; }
-.plane_row .hp { font-weight: bold; white-space: nowrap; }
-.plane_row.hit .hp { color: #c06000; }
-.plane_row.damaged .hp { color: #c00000; }
-.plane_row.destroyed, .plane_row.off { color: #888; }
-.plane_row.destroyed .name { text-decoration: line-through; }
-.plane_row.destroyed .hp, .plane_row.off .hp { font-weight: normal; font-style: italic; }
