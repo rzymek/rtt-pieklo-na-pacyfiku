@@ -3,7 +3,7 @@ import {G, planes, R_Jap, R_Amer} from "../globals";
 import type {PlaneInstance} from "../types";
 import {ALT_HIGH, ALT_LOW, ALT_LOWEST, ALT_VERY_HIGH, ALT_VERY_LOW, canChangeAltitude, maxSpeedAt} from "./altitude";
 import {firstOnFireLine} from "./combat";
-import {movesMapFor} from "./hex";
+import {exitsFor, movesMapFor} from "./hex";
 import {planesInFirelane} from "../procedures/planesInFirelane";
 
 vi.mock("../globals", async importOriginal => ({
@@ -109,6 +109,48 @@ describe('movesMapFor', () => {
       expect(moves).not.toHaveProperty(["A22.B23"]);
       expect(moves).not.toHaveProperty(["A23.B24"]);
     });
+  });
+});
+
+describe('4.2.1 altitude change on any hex of the way', () => {
+  // direction 0: A20.B21, A20.B22, ...
+
+  it('passes under a plane by descending before its hex', () => {
+    const moves = movesMapFor(spit(), {[R_Amer]: [he111({at: "A20.B22", altitude: ALT_VERY_HIGH})]}, ALT_HIGH);
+    expect(moves).toHaveProperty(["A20.B22"]);
+    expect(moves).toHaveProperty(["A20.B23"]);
+  });
+
+  it('passes a plane at the new altitude by descending after its hex', () => {
+    const moves = movesMapFor(spit(), {[R_Amer]: [he111({at: "A20.B22", altitude: ALT_HIGH})]}, ALT_HIGH);
+    expect(moves).not.toHaveProperty(["A20.B22"]);
+    expect(moves).toHaveProperty(["A20.B23"]);
+  });
+
+  it('changes the altitude only once', () => {
+    // old altitude blocked first, then the new one: no hex to change on
+    const blocked = [he111({at: "A20.B22", altitude: ALT_VERY_HIGH}), he111({id: "0.1", at: "A20.B23", altitude: ALT_HIGH})];
+    const moves = movesMapFor(spit(), {[R_Amer]: blocked}, ALT_HIGH);
+    expect(moves).toHaveProperty(["A20.B22"]);
+    expect(moves).not.toHaveProperty(["A20.B23"]);
+    expect(moves).not.toHaveProperty(["A20.B24"]);
+    // the new altitude blocked first, then the old one: change between them
+    const passable = [he111({at: "A20.B22", altitude: ALT_HIGH}), he111({id: "0.1", at: "A20.B23", altitude: ALT_VERY_HIGH})];
+    expect(movesMapFor(spit(), {[R_Amer]: passable}, ALT_HIGH)).toHaveProperty(["A20.B24"]);
+  });
+
+  it('cannot pass at an unchanged altitude', () => {
+    const moves = movesMapFor(spit(), {[R_Amer]: [he111({at: "A20.B22", altitude: ALT_VERY_HIGH})]});
+    expect(moves).not.toHaveProperty(["A20.B23"]);
+  });
+
+  it('applies to the ways off the board', () => {
+    const plane = spit({at: "A20.B44"});
+    const blocker = he111({at: "A20.B46", altitude: ALT_VERY_HIGH});
+    const exit = {hex: "A20.B47", edge: "N"};
+    expect(exitsFor(plane, {})).toContainEqual(exit);
+    expect(exitsFor(plane, {[R_Amer]: [blocker]})).not.toContainEqual(exit);
+    expect(exitsFor(plane, {[R_Amer]: [blocker]}, ALT_HIGH)).toContainEqual(exit);
   });
 });
 
