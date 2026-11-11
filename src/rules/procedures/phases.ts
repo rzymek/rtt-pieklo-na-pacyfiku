@@ -1,4 +1,4 @@
-import {G, R_Amer, ROLES} from "../globals";
+import {G, R_Amer} from "../globals";
 import {ALT_VERY_HIGH, altitudeOf} from "../game/altitude";
 import {hexesAround} from "../game/scenarios";
 import {changeSide, otherSide} from "../lifecycle/changeSide";
@@ -8,10 +8,12 @@ import {gunsReady} from "./aa_guns";
 import {canAttackGround} from "./bombers";
 import {nextToReturn} from "./return_planes";
 import {isGameOver} from "../game/victory";
+import {logEvent, logPhase, logStage} from "./log";
 
 // 3.0: a movement phase (1, 4) is followed by the AA phase of the other side (2, 5).
 export function endMovement() {
   changeSide()
+  logPhase(G.active, "ostrzał przeciwlotniczy")
   G.aa_fired = []
   if (!isEmpty(gunsReady())) return goto("anti_aircraft")
   endAntiAircraft()
@@ -22,6 +24,7 @@ export function endMovement() {
 export function endAntiAircraft() {
   delete G.selected_gun
   changeSide()
+  logPhase(G.active, "walka")
   if (!isEmpty(shootersOf(otherSide(G.active)))) {
     changeSide()
     return goto("moved_into_firelane")
@@ -51,19 +54,22 @@ export function endCombat() {
     // 6.2: the "under fire" counters come off at the end of the stage.
     for (const plane of Object.values(G.board.planes).flat()) delete plane.under_fire
     // 2.0
-    log(`Etap ${G.stage}`)
+    logStage(G.stage)
   }
   G.shot = []
+  logPhase(G.active, "ruch")
   enterReinforcements()
   startMovement()
 }
 
 export function startMovement() {
+  logPhase(G.active, "ruch")
   if (nextToReturn()) return goto("return_planes")
   // A finished game ends once the action is complete (endingGame), so it must not skip on until then.
   if (isGameOver() || G.board.planes[G.active].some(plane => !plane.destroyed)) return goto("move_planes")
   // With no own plane on the board nothing can be moved or fired at, but AA guns may still have targets.
-  log(`${ROLES[G.active]}: brak samolotów na planszy – faza ruchu pominięta`)
+  logEvent(G.active, "brak samolotów na planszy – faza ruchu pominięta")
+  logPhase(G.active, "walka")
   startCombat()
 }
 
@@ -78,7 +84,7 @@ function enterReinforcements() {
     const hex = hexesAround(at, 5).find(it => !occupied.includes(it))!
     const offBoard = (G.off_board ?? []).filter(it => parseInt(it.plane.id) === G.active).length
     planes.push({plane, at: hex, direction, id: `${G.active}.${planes.length + offBoard}`})
-    log(`${ROLES[G.active]}: posiłki ${plane.nazwa} na ${hex}`)
+    logEvent(G.active, `posiłki ${plane.nazwa} na ${hex}`)
   }
   if (entering.length > 0)
     G.reinforcements![G.active] = G.reinforcements![G.active].filter(it => it.stage !== G.stage)

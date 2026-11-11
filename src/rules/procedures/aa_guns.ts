@@ -8,6 +8,7 @@ import {boardHexes} from "../game/scenarios";
 import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {otherSide} from "../lifecycle/changeSide";
 import {endAntiAircraft} from "./phases";
+import {logAttack, logEvent} from "./log";
 
 function landGuns() {
   return G.aa_guns ?? []
@@ -41,7 +42,7 @@ export const placeAaGuns = {
   done() {
     if (gunsLeftToPlace() > 0) return
     clear_undo()
-    log(`${ROLES[G.active]}: rozstawiono działka p-lot (${L.count})`)
+    logEvent(G.active, `${ROLES[G.active]}: rozstawiono działka p-lot (${L.count})`)
     // 9.3: the Japanese set up their planes first.
     G.active = R_Jap
     goto("place_planes")
@@ -101,7 +102,7 @@ export function fireGun(planeId: string) {
   const shot = aaShot(gun, plane, roll)
   if (shot.underFire) plane.under_fire = true
   const result = shot.damage > 0 ? `trafienie → ${applyHit(plane, shot.damage)}` : shot.underFire ? "pod ostrzałem" : "pudło"
-  log(`Działko ${caliber(gun.heavy)} ${gun.label} ostrzeliwuje ${description} [${ALTITUDE_NAMES[altitudeOf(plane)]}, rzut:${roll}] → ${result}`)
+  logAttack(G.active, `Działko ${caliber(gun.heavy)} ${gun.label} ostrzeliwuje ${description}`, `${ALTITUDE_NAMES[altitudeOf(plane)]} · rzut ${roll}`, result)
 }
 
 // 3.0, phases 2 and 5: right after the enemy's movement, the guns fire at its planes.
@@ -140,8 +141,8 @@ export function bombGun(hex: string) {
   const roll = random(6) + 1
   if (roll >= GUN_DESTROYED_FROM) {
     G.aa_guns = landGuns().filter(it => it.hex !== hex)
-    log(`Działko ${hex} zbombardowane [rzut:${roll}] → zniszczone`)
+    logAttack(null, `Działko ${hex} zbombardowane`, `rzut ${roll}`, "zniszczone")
   } else {
-    log(`Działko ${hex} zbombardowane [rzut:${roll}] → ocalało`)
+    logAttack(null, `Działko ${hex} zbombardowane`, `rzut ${roll}`, "ocalało")
   }
 }

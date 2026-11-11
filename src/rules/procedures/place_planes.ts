@@ -5,6 +5,7 @@ import {hexesAround} from "../game/scenarios";
 import {select_plane} from "./select_plane";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
 import {startMovement} from "./phases";
+import {logEvent} from "./log";
 
 export function isOccupiedAt(hex: string, altitude: number): boolean {
   return Object.values(G.board.planes).flat()
@@ -99,7 +100,7 @@ export const placePlanes = {
     if (queue().length > 0) return
     clear_undo()
     delete G.selected_plane
-    log(`${ROLES[G.active]}: rozstawiono samoloty`)
+    logEvent(G.active, `${ROLES[G.active]}: rozstawiono samoloty`)
     if (G.active === R_Jap) {
       G.active = R_Amer
     } else {

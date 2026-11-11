@@ -1,5 +1,6 @@
 import type {PlaneInstance} from "../types";
-import {G, ROLES} from "../globals";
+import {G} from "../globals";
+import {logAttack} from "./log";
 import {ATTACK_NAMES, AttackKind, attackDamage, bombsLeft} from "../game/bombs";
 import {ALT_HIGH, ALT_LOW, ALT_LOWEST} from "../game/altitude";
 import {damageShip, shipAt} from "../game/ships";
@@ -61,7 +62,7 @@ function rollAttack(plane: PlaneInstance, kind: AttackKind, hex: string): number
   const ship = shipAt(ships(), hex)
   const what = ship ? ship.nazwa : `cel ${hex}`
   const result = damage === 0 ? "bez skutku" : ship ? `uszkodzenia: ${damage} → ${damageShip(ship, damage)}` : `trafiony (uszkodzenia: ${damage})`
-  log(`${ROLES[G.active]}: ${plane.plane.nazwa} – ${ATTACK_NAMES[kind]}, ${what}${underFire ? ", pod ostrzałem" : ""} [rzut:${roll}] → ${result}`)
+  logAttack(G.active, `${plane.plane.nazwa} – ${ATTACK_NAMES[kind]}, ${what}`, `${underFire ? "pod ostrzałem · " : ""}rzut ${roll}`, result)
   return damage
 }
 

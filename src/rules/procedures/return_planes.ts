@@ -1,5 +1,6 @@
 import type {OffBoardPlane} from "../types";
-import {G, ROLES} from "../globals";
+import {G} from "../globals";
+import {logEvent} from "./log";
 import {altitudeOf} from "../game/altitude";
 import {isEdgeHex} from "../game/hex";
 import {hexesAround} from "../game/scenarios";
@@ -44,7 +45,7 @@ export const returnPlanes = {
     G.board.planes[G.active].push(next.plane)
     G.off_board = G.off_board!.filter(it => it !== next)
     G.selected_plane = next.plane.id
-    log(`${ROLES[G.active]}: ${next.plane.plane.nazwa} wraca na planszę na ${hex}`)
+    logEvent(G.active, `${next.plane.plane.nazwa} wraca na planszę na ${hex}`)
   },
 
   turn_left() {

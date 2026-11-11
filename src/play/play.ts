@@ -1,8 +1,11 @@
 import {onInit} from "./on_init";
 import {onUpdate} from "./on_update";
+import {onLog} from "./on_log";
 
 on_init = onInit;
 on_update = onUpdate;
+// on_log is optional, so client.js doesn't declare it: assigning it bare would throw.
+Object.assign(globalThis, {on_log: onLog});
 
 add_main_menu_item_link("Rules", "/pieklo-na-pacyfiku/info/rules.pdf");
 

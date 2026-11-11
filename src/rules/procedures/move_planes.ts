@@ -6,6 +6,7 @@ import {endMovement} from "./phases";
 import {select_plane} from "./select_plane.js";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
 import type {PlaneInstance} from "../types";
+import {logAttack, logEvent, logLoss} from "./log";
 
 function selectAltitude(altitude: number) {
   const plane = selectedPlaneOfTheActiveSide();
@@ -45,7 +46,7 @@ function takeOffBoard(plane: PlaneInstance, from: string) {
   G.off_board ??= []
   const return_stage = G.stage + RETURN_AFTER_STAGES
   G.off_board.push({plane, return_stage, from})
-  log(`${ROLES[side]}: ${plane.plane.nazwa} opuszcza planszę na ${from} – powrót w etapie ${return_stage}`)
+  logEvent(side, `${plane.plane.nazwa} opuszcza planszę na ${from} – powrót w etapie ${return_stage}`)
   clearSelection()
 }
 
@@ -64,10 +65,10 @@ function collide(plane: PlaneInstance) {
   clear_undo()
   const roll = random(6) + 1
   if (roll !== COLLISION_ROLL) {
-    log(`${plane.plane.nazwa} wlatuje na zajęty heks ${plane.at} [rzut:${roll}] → bez kolizji`)
+    logAttack(G.active, `${plane.plane.nazwa} wlatuje na zajęty heks ${plane.at}`, `rzut ${roll}`, "bez kolizji")
     return
   }
-  log(`${plane.plane.nazwa} wlatuje na zajęty heks ${plane.at} [rzut:${roll}] → zderzenie`)
+  logAttack(G.active, `${plane.plane.nazwa} wlatuje na zajęty heks ${plane.at}`, `rzut ${roll}`, "zderzenie – oba zniszczone")
   for (const it of [plane, ...others]) {
     it.destroyed = true
   }
@@ -159,7 +160,7 @@ export const movePlanes = {
       plane.at = hex
       plane.altitude = G.selected_altitude ?? altitudeOf(plane)
       plane.destroyed = true
-      log(`${ROLES[G.active]}: ${plane.plane.nazwa} opuszcza planszę na ${hex} – uznany za zestrzelony`)
+      logLoss(G.active, `${plane.plane.nazwa} opuszcza planszę na ${hex} – uznany za zestrzelony`)
       clearSelection()
     } else if (rule === "return") {
       takeOffBoard(plane, hex)
@@ -185,7 +186,7 @@ export const movePlanes = {
     plane.altitude = G.selected_altitude ?? altitudeOf(plane)
     plane.destroyed = true
     plane.left_board = true
-    log(`${ROLES[G.active]}: ${plane.plane.nazwa} opuszcza planszę i nie wróci`)
+    logEvent(G.active, `${plane.plane.nazwa} opuszcza planszę i nie wróci`)
     clearSelection()
   },
 

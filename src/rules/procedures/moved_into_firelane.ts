@@ -1,7 +1,8 @@
 import type {PlaneInstance} from "../types";
 import {G, L, ROLES} from "../globals";
 import {applyHit, applyShot, describeShot, resolveShot, rollShot} from "../game/combat";
-import {changeSide} from "../lifecycle/changeSide";
+import {changeSide, otherSide} from "../lifecycle/changeSide";
+import {logAttack, logOutcome, shotDice} from "./log";
 import {isEmpty} from "@rzymek/rally-the-troops-module/rules";
 import {select_plane} from "./select_plane";
 import {selectedPlaneOfTheActiveSide} from "./selectedPlaneOfTheActiveSide";
@@ -53,7 +54,7 @@ export const movedIntoFirelane = {
     if (!plane || !hit) return
     markShot(plane)
     const shot = rollShot(plane, hit.plane, hit.distance, hit.rear)
-    log(`${ROLES[G.active]}: ${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""} poza swoją fazą [SA:${shot.atk} odl:${hit.distance} rzut:${shot.roll}] → ${shot.result}`)
+    logAttack(G.active, `${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""} (linia ognia)`, shotDice(shot.atk, hit.distance, shot.roll), shot.result)
     if (shot.damage === 0) return afterShot()
     if (fireTargets(hit.plane, hit.side).some(it => it.plane.id === plane.id)) {
       // Coinciding fire lines: the target shoots back before this hit takes effect.
@@ -64,7 +65,7 @@ export const movedIntoFirelane = {
       clear_undo()
       return goto("return_fire", {shooter: plane.id, target: hit.plane.id, damage: shot.damage, downed: shot.downed})
     }
-    log(`${hit.plane.plane.nazwa}: ${applyShot(hit.plane, shot)}`)
+    logOutcome(G.active, hit.plane.plane.nazwa, applyShot(hit.plane, shot))
     afterShot()
   },
 
@@ -75,7 +76,7 @@ export const movedIntoFirelane = {
 
 function endReturnFire() {
   const target = planeById(L.target)
-  log(`${target.plane.nazwa}: ${applyHit(target, L.damage as number, L.downed as boolean)}`)
+  logOutcome(otherSide(G.active), target.plane.nazwa, applyHit(target, L.damage as number, L.downed as boolean))
   changeSide()
   goto("moved_into_firelane")
   afterShot()
@@ -104,7 +105,7 @@ export const returnFire = {
     if (hit) {
       markShot(plane)
       const {roll, atk, result} = resolveShot(plane, hit)
-      log(`${ROLES[G.active]}: ${plane.plane.nazwa} odpowiada ogniem${hit.rear ? " do tyłu" : ""} [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
+      logAttack(G.active, `${plane.plane.nazwa} odpowiada ogniem${hit.rear ? " do tyłu" : ""}`, shotDice(atk, hit.distance, roll), result)
     }
     endReturnFire()
   },

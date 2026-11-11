@@ -8,6 +8,7 @@ import {endCombat} from "./phases"
 import {bombableHexes, bombingKind, canAttackGround, dropBomb, launchTorpedo, torpedoHexes} from "./bombers"
 import {ATTACK_NAMES} from "../game/bombs"
 import type {PlaneInstance} from "../types"
+import {logAttack, shotDice} from "./log"
 
 // Planes that could still fire, drop bombs or launch a torpedo.
 function stillActive(side: number): PlaneInstance[] {
@@ -90,7 +91,7 @@ export const combat = {
     clear_undo()
     markShot(plane)
     const {roll, atk, result} = resolveShot(plane, hit)
-    log(`${ROLES[G.active as number]}: ${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""} [SA:${atk} odl:${hit.distance} rzut:${roll}] → ${result}`)
+    logAttack(G.active as number, `${plane.plane.nazwa} atakuje ${hit.plane.plane.nazwa}${hit.rear ? " do tyłu" : ""}`, shotDice(atk, hit.distance, roll), result)
     delete G.selected_plane
     delete G.selected_target
   },
@@ -105,9 +106,9 @@ export const combat = {
       delete plane.jammed
       // 5.3.4
       plane.unjammed_stage = G.stage
-      log(`${ROLES[G.active as number]} odblokował karabiny (rzut:${roll}) – sukces`)
+      logAttack(G.active as number, `${plane.plane.nazwa} odblokowuje karabiny`, `rzut ${roll}`, "sukces")
     } else {
-      log(`${ROLES[G.active as number]} nie odblokował karabinów (rzut:${roll})`)
+      logAttack(G.active as number, `${plane.plane.nazwa} odblokowuje karabiny`, `rzut ${roll}`, "bez skutku")
     }
     delete G.selected_plane
   },

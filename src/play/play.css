@@ -21,3 +21,56 @@ body.hide-pieces #expanded-stack {
 	padding: 0 5px 3px;
 	font-size: 14px;
 }
+
+/* Log: stage and phase headers, a coloured bar for the acting side, the outcome of a roll indented below. */
+#log .h1 {
+	font-weight: bold;
+	background-color: #ccc;
+	border-top: 1px solid #888;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	margin-top: 6px;
+}
+
+#log .h2 {
+	font-weight: bold;
+	background-color: #eee;
+	margin-top: 4px;
+}
+
+#log .s0 {
+	border-left: 4px solid #1f3a6e;
+}
+
+#log .s1 {
+	border-left: 4px solid #b3202a;
+}
+
+#log .res {
+	padding-left: 20px;
+	font-size: 90%;
+	margin-bottom: 3px;
+}
+
+#log .res.miss {
+	color: #777;
+}
+
+#log .res.dmg {
+	color: #b35c00;
+	font-weight: bold;
+}
+
+#log .res.jam {
+	color: #8a6d00;
+	font-style: italic;
+}
+
+#log .kill {
+	color: #c00;
+	font-weight: bold;
+}
+
+#log .kill::before {
+	content: "✖ ";
+}

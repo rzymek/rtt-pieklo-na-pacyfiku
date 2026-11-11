@@ -88,4 +88,6 @@ export interface GameState extends BaseGameState {
   sun?: SunEdge
   // The name of the scenario, for its victory conditions (8.0.1) and special rules.
   scenario?: string
+  // The log header of the current phase, written out with the first line of that phase.
+  log_phase?: string
 }
